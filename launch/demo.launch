@@ -1,0 +1,29 @@
+<launch>
+
+<!--
+<arg name="cloud_topic" default="/kitti/velo/pointcloud"/>
+-->
+
+<arg name="cloud_topic" default="/velodyne_points"/>
+<arg name="input" default="/velodyne_points"/> 
+
+  <node name="ground_segmentation" pkg="patchworkpp" type="demo" output="screen">
+    <rosparam command="load" file="$(find patchworkpp)/config/params.yaml" />
+    
+
+    <param name="cloud_topic" value="$(arg cloud_topic)"/>
+
+  </node>
+  
+
+
+  <node name="pcl_seg_node" pkg="pcl_seg" type="inten_level_compress_radi" output="screen">
+    
+    <param name="input" value="$(arg input)"/>
+  </node>
+	
+
+  
+  <!--node name="$(anon rviz)" pkg="rviz" type="rviz" args="-d $(find patchworkpp)/rviz/demo.rviz"/-->
+
+</launch>

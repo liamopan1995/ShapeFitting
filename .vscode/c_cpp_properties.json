@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/liam/ws_livox/devel/include/**",
+        "/home/liam/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/liam/catkin_ws/src/beginner_tutorials/include/**",
+        "/home/liam/catkin_ws/src/my_pcl_tutorial/include/**",
+        "/home/liam/catkin_ws/src/my_roscpp_library/include/**",
+        "/home/liam/catkin_ws/src/patchwork-plusplus-ros/include/**",
+        "/home/liam/catkin_ws/src/pcl_seg/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
