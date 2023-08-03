@@ -11,23 +11,25 @@
 #include "patchworkpp/patchworkpp.hpp"
 #include <pcl/filters/crop_box.h>
 #include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/segmentation/extract_clusters.h>
 
 typedef pcl::PointXYZI PointType;
 
 // write a class which iherits from the class Patchworkpp
-class cloudSegmentation {
-  private:
-
+class cloudSegmentation
+{
+private:
     ros::NodeHandle nh;
     ros::NodeHandle pnh;
-    
+
     //  this class processes an object instantiated from an class(let's call it Stemworkpp) , which is a subclass of Patchworkpp
     boost::shared_ptr<PatchWorkpp<PointType>> PatchworkppGroundSeg;
 
     ros::Publisher pubGroundCloud;
     ros::Publisher pubStemCloud;
+    ros::Publisher pubTrunksCluster;
 
-    // debugging use only 
+    // debugging use only
     ros::Publisher pubDebug;
     ros::Subscriber subLaserCloud;
     // end of debugging use only
@@ -36,89 +38,95 @@ class cloudSegmentation {
     pcl::PointCloud<PointType>::Ptr groundCloud;
     pcl::PointCloud<PointType>::Ptr nonGroundCloud;
     pcl::PointCloud<PointType>::Ptr stemCloud;
-
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr clustered_cloud; // Place holder pointXYZRGB.. // TRY : pointcloud XYZRGBA latter
+    std::vector<pcl::PointIndices> cluster_indices;         // store the cluster indice
     PointType nanPoint;
 
     std_msgs::Header cloudHeader;
     double time_taken;
+    // std::vector<float> Zvalue; intentially used for storing z value.
 
-  public:
-   cloudSegmentation():
-    nh(), pnh("~"){
+public:
+    cloudSegmentation() : nh(), pnh("~")
+    {
 
-      subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>("/velodyne_points", 1, &cloudSegmentation::cloudHandler, this);
-      
-      pubGroundCloud = nh.advertise<sensor_msgs::PointCloud2> ("/ground_cloud", 1);
-      pubStemCloud = nh.advertise<sensor_msgs::PointCloud2> ("/stem_cloud", 1);
-      
-      // for debugging use 
-      pubDebug = nh.advertise<sensor_msgs::PointCloud2> ("/debugging", 1);
+        subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>("/velodyne_points", 1, &cloudSegmentation::cloudHandler, this);
 
-      nanPoint.x = std::numeric_limits<float>::quiet_NaN();
-      nanPoint.y = std::numeric_limits<float>::quiet_NaN();
-      nanPoint.z = std::numeric_limits<float>::quiet_NaN();
-      nanPoint.intensity = -1;
+        pubGroundCloud = nh.advertise<sensor_msgs::PointCloud2>("/ground_cloud", 1);
+        pubStemCloud = nh.advertise<sensor_msgs::PointCloud2>("/stem_cloud", 1);
+        pubTrunksCluster = nh.advertise<sensor_msgs::PointCloud2>("clustered_cloud_trunks", 1);
+        // for debugging use
+        pubDebug = nh.advertise<sensor_msgs::PointCloud2>("/debugging", 1);
 
-      allocateMemory();
-      resetParameters();
+        nanPoint.x = std::numeric_limits<float>::quiet_NaN();
+        nanPoint.y = std::numeric_limits<float>::quiet_NaN();
+        nanPoint.z = std::numeric_limits<float>::quiet_NaN();
+        nanPoint.intensity = -1;
 
+        allocateMemory();
     }
 
     // pnh("~"){
 
     // }
-    void allocateMemory(){
+    void allocateMemory()
+    {
 
-        laserCloudIn.reset(new pcl::PointCloud<PointType>());
-        groundCloud.reset(new pcl::PointCloud<PointType>());
-        nonGroundCloud.reset(new pcl::PointCloud<PointType>());
-        stemCloud.reset(new pcl::PointCloud<PointType>());
+        laserCloudIn.reset(new pcl::PointCloud<PointType>);
+        groundCloud.reset(new pcl::PointCloud<PointType>);
+        nonGroundCloud.reset(new pcl::PointCloud<PointType>);
+        stemCloud.reset(new pcl::PointCloud<PointType>);
+        clustered_cloud.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+
         std::string cloud_topic;
         pnh.param<string>("cloud_topic", cloud_topic, "/velodyne_points");
         PatchworkppGroundSeg.reset(new PatchWorkpp<PointType>(&pnh));
-        
+        resetParameters();
     }
 
-	// Init,rest memebers
-    void resetParameters(){
+    // Init,rest memebers
+    void resetParameters()
+    {
+
         laserCloudIn->clear();
         groundCloud->clear();
         nonGroundCloud->clear();
         stemCloud->clear();
-
+        clustered_cloud->clear();
         std::fill(laserCloudIn->points.begin(), laserCloudIn->points.end(), nanPoint);
     }
 
-    ~cloudSegmentation(){}
+    ~cloudSegmentation() {}
 
-    void copyPointCloud(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
+    void copyPointCloud(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
+    {
         // 将ROS中的sensor_msgs::PointCloud2ConstPtr类型转换到pcl点云库指针
         cloudHeader = laserCloudMsg->header;
         pcl::fromROSMsg(*laserCloudMsg, *laserCloudIn);
 
-
         // this part is working
-
     }
 
-    void voxelFilter(){
+    void voxelFilter()
+    {
         pcl::PointCloud<PointType>::Ptr pc_voxel_filtered(new pcl::PointCloud<PointType>);
         pcl::VoxelGrid<PointType> voxel_filter;
         voxel_filter.setInputCloud(laserCloudIn);
-        voxel_filter.setLeafSize(0.5, 0.5, 0.5);  
+        voxel_filter.setLeafSize(0.5, 0.5, 0.5);
         voxel_filter.filter(*laserCloudIn);
 
         // this part is working
     }
 
-    void removePointsInBox() {
+    void removePointsInBox()
+    {
         pcl::CropBox<PointType> cropFilter;
         cropFilter.setInputCloud(laserCloudIn);
         cropFilter.setMin(Eigen::Vector4f(-5, -5, -5, 1.0)); // Minimum coordinates of the box
-        cropFilter.setMax(Eigen::Vector4f(5, 5, 5, 1.0)); // Maximum coordinates of the box
+        cropFilter.setMax(Eigen::Vector4f(5, 5, 5, 1.0));    // Maximum coordinates of the box
 
         // Set the filter to remove points inside the box
-        cropFilter.setNegative(true); 
+        cropFilter.setNegative(true);
         pcl::PointCloud<PointType>::Ptr outputCloud(new pcl::PointCloud<PointType>);
         cropFilter.filter(*outputCloud);
 
@@ -126,92 +134,166 @@ class cloudSegmentation {
         *laserCloudIn = *outputCloud;
         // now it is working well
     }
-    void removeByIntensity(pcl::PointCloud<PointType>::Ptr& inputCloud,float intensityThreshold=8){
+    void removeByIntensity(pcl::PointCloud<PointType>::Ptr &inputCloud, float intensityThreshold = 8)
+    {
         // Set the intensity threshold for outlier removal
         // started from 100, cut to half after each iteration 24 was the optimal when input topic is velodyne_points
-        
+
         // Create the condition object
-        pcl::ConditionAnd<PointType>::Ptr intensityCondition (new pcl::ConditionAnd<PointType> ());
-        intensityCondition->addComparison (pcl::FieldComparison<PointType>::ConstPtr (new 
-        pcl::FieldComparison<PointType> ("intensity", pcl::ComparisonOps::GT, intensityThreshold)));
+        pcl::ConditionAnd<PointType>::Ptr intensityCondition(new pcl::ConditionAnd<PointType>());
+        intensityCondition->addComparison(pcl::FieldComparison<PointType>::ConstPtr(new pcl::FieldComparison<PointType>("intensity", pcl::ComparisonOps::GT, intensityThreshold)));
 
         // Create the conditional removal filter
         pcl::ConditionalRemoval<PointType> cr;
         cr.setInputCloud(inputCloud);
-        //cr.setInputCloud(nonGroundCloud);
+        // cr.setInputCloud(nonGroundCloud);
         cr.setCondition(intensityCondition);
         cr.setKeepOrganized(true); // Set to true if you want to preserve the structure of the input cloud
 
         // Create a place holder then apply the intensity threshold condition to remove outliers
         pcl::PointCloud<PointType>::Ptr filteredIntensity(new pcl::PointCloud<PointType>);
         cr.filter(*filteredIntensity);
-        //nonGroundCloud = filteredIntensity;
+        // nonGroundCloud = filteredIntensity;
         inputCloud = filteredIntensity;
 
         // this part works well too
     }
 
-    void projectTo2D(){
-    // void projectTo2D(pcl::PointCloud<PointType>::Ptr& nonGroundCloud){
-        for (auto& point : nonGroundCloud->points) {
-        point.intensity = point.z;
-        point.z = 0.0;
+    void projectTo2D()
+    {
+        // void projectTo2D(pcl::PointCloud<PointType>::Ptr& nonGroundCloud){
+        for (auto &point : nonGroundCloud->points)
+        {
+            point.intensity = point.z;
+            point.z = 0.0;
         }
         // this wokks well inside the function
     }
 
-    void removeNan(){
+    void removeNan()
+    {
         std::vector<int> indices;
         pcl::removeNaNFromPointCloud(*nonGroundCloud, *nonGroundCloud, indices);
     }
 
-    void radiusOutlierRemoval(int radius=9){
+    void radiusOutlierRemoval(int radius = 9)
+    { // radius=9 works well
         pcl::RadiusOutlierRemoval<pcl::PointXYZI> filter;
         filter.setInputCloud(nonGroundCloud);
-        filter.setRadiusSearch(0.32); 
-        filter.setMinNeighborsInRadius(radius); // Tune this 
+        filter.setRadiusSearch(0.32);
+        filter.setMinNeighborsInRadius(radius); // Tune this
         pcl::PointCloud<pcl::PointXYZI>::Ptr filteredRadiusOutlierRemoval(new pcl::PointCloud<pcl::PointXYZI>);
         filter.filter(*filteredRadiusOutlierRemoval);
         nonGroundCloud = filteredRadiusOutlierRemoval;
     }
-    void projectTo3D(){
-    //void projectTo3D(pcl::PointCloud<PointType>::Ptr& nonGroundCloud){
-        for (auto& point : nonGroundCloud->points) {
-        point.z = point.intensity;
+
+    void euclideanClustering()
+    {
+
+        // Clear the point cloud before clustering
+        clustered_cloud->clear();
+        // Zvalue.clear();
+        pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
+
+        // Now cluster pointcloud into seperate trunks first
+
+        ec.setClusterTolerance(0.3); //
+        ec.setMinClusterSize(20);    //
+        ec.setMaxClusterSize(1000);  //   60 was good.
+
+        ec.setInputCloud(nonGroundCloud); //
+        ec.extract(cluster_indices);
+
+        for (const pcl::PointIndices &cluster : cluster_indices)
+        {
+            // Generate a random RGB color
+            uint8_t r = std::rand() % 256;
+            uint8_t g = std::rand() % 256;
+            uint8_t b = std::rand() % 256;
+
+            // Pack RGB values into a single float
+            int32_t rgb_value = (static_cast<uint32_t>(r) << 16 | static_cast<uint32_t>(g) << 8 | static_cast<uint32_t>(b));
+
+            for (const int index : cluster.indices)
+            {
+                // Create a new point with assigned color
+                pcl::PointXYZRGB point;
+                point.x = nonGroundCloud->points[index].x;
+                point.y = nonGroundCloud->points[index].y;
+                point.z = 0.0;
+                //point.intensity = nonGroundCloud->points[index].intensity;
+                // Zvalue.push_back(nonGroundCloud->points[index].z);
+
+                point.rgb = *reinterpret_cast<float *>(&rgb_value); // Set RGB value
+                clustered_cloud->points.push_back(point);
+            }
+        }
+
+        //  TODO:
+
+        // 1. remove outliers  by radius
+        // 2. reconstruct z value
+
+        cluster_indices.clear();
+
+        clustered_cloud->width = clustered_cloud->size();
+        clustered_cloud->height = 1;
+        clustered_cloud->is_dense = true;
+    }
+
+    void projectTo3D()
+    {
+        // void projectTo3D(pcl::PointCloud<PointType>::Ptr& nonGroundCloud){
+        for (auto &point : nonGroundCloud->points)
+        {
+            point.z = point.intensity;
         }
     }
 
-    void stemSeg(){
+    void stemSeg()
+    {
         removeByIntensity(nonGroundCloud);
         projectTo2D();
         removeNan();
         radiusOutlierRemoval();
+        euclideanClustering(); // do stems grouping
         projectTo3D();
     }
 
-    void publishCloud(){
+    void publishCloud()
+    {
 
         sensor_msgs::PointCloud2 laserCloudTemp;
 
-        // segmented ground cloud 
-        if (pubGroundCloud.getNumSubscribers() != 0){
+        // segmented ground cloud
+        if (pubGroundCloud.getNumSubscribers() != 0)
+        {
             pcl::toROSMsg(*groundCloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
             laserCloudTemp.header.frame_id = cloudHeader.frame_id;
             pubGroundCloud.publish(laserCloudTemp);
         }
 
-        // segmented stem cloud 
-        if (pubStemCloud.getNumSubscribers() != 0){
+        // segmented stem cloud
+        if (pubStemCloud.getNumSubscribers() != 0)
+        {
             pcl::toROSMsg(*nonGroundCloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
             laserCloudTemp.header.frame_id = cloudHeader.frame_id;
             pubStemCloud.publish(laserCloudTemp);
-        }
 
+        }
+        if (pubTrunksCluster.getNumSubscribers() != 0)
+        {
+            pcl::toROSMsg(*clustered_cloud, laserCloudTemp);
+            laserCloudTemp.header.stamp = cloudHeader.stamp;
+            laserCloudTemp.header.frame_id = cloudHeader.frame_id;
+            pubTrunksCluster.publish(laserCloudTemp);
+        }
     }
-    
-    void cloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
+
+    void cloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
+    {
 
         copyPointCloud(laserCloudMsg);
 
@@ -223,26 +305,22 @@ class cloudSegmentation {
         // Result: removebyintensity doe not have any noticeable improvement on the result
         // and will potentially  slow down the computation. so it is better not to have it here neither.
 
-        // Trying with voxel filter removed 
-        // voxelFilter();  
+        // Trying with voxel filter removed
+        // voxelFilter();
         // Confirmed:[It is better not to has voxel filter here]
 
         removePointsInBox();
-        PatchworkppGroundSeg->estimate_ground(*laserCloudIn,*groundCloud,*nonGroundCloud,time_taken); 
+        PatchworkppGroundSeg->estimate_ground(*laserCloudIn, *groundCloud, *nonGroundCloud, time_taken);
         stemSeg();
         publishCloud();
-
     }
-    
-
-    
-
 };
 
-int main(int argc, char** argv){
+int main(int argc, char **argv)
+{
 
     ros::init(argc, argv, "cloudseg");
-    
+
     cloudSegmentation IP;
 
     ROS_INFO("\033[1;32m---->\033[0m Cloud Segmentation Started.");
@@ -250,4 +328,3 @@ int main(int argc, char** argv){
     ros::spin();
     return 0;
 }
-

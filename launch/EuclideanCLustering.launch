@@ -1,0 +1,17 @@
+<launch>
+
+<arg name="cloud_topic" default="/velodyne_points"/>
+
+  <node name="ground_segmentation" pkg="patchworkpp" type="CloudSegmentaion" output="screen">
+    <rosparam command="load" file="$(find patchworkpp)/config/params.yaml" />
+    <param name="cloud_topic" value="$(arg cloud_topic)"/>
+  </node>
+  
+  <node name="euclidean_cluster" pkg="patchworkpp" type="EuclideanClustering" output="screen">
+  </node>
+  
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find patchworkpp)/rviz/stemground.rviz" />
+
+
+
+</launch>

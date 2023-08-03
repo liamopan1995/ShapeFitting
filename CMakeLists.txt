@@ -89,6 +89,10 @@ add_executable(CloudSegmentaion src/CloudSegmentaion.cpp)
 target_link_libraries(CloudSegmentaion ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp)
 
+
+add_executable(EuclideanClustering src/EuclideanClustering.cpp)
+target_link_libraries(EuclideanClustering ${catkin_LIBRARIES})
+
 # ==== Install ====
 
 # start of modification
