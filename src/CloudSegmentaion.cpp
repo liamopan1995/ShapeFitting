@@ -176,12 +176,12 @@ public:
         pcl::removeNaNFromPointCloud(*nonGroundCloud, *nonGroundCloud, indices);
     }
 
-    void radiusOutlierRemoval(int radius = 9)
+    void radiusOutlierRemoval(int minNeigh = 9)   // aug 4. = 9
     { // radius=9 works well
         pcl::RadiusOutlierRemoval<pcl::PointXYZI> filter;
         filter.setInputCloud(nonGroundCloud);
-        filter.setRadiusSearch(0.32);
-        filter.setMinNeighborsInRadius(radius); // Tune this
+        filter.setRadiusSearch(0.2);  // aug 4. =0.32
+        filter.setMinNeighborsInRadius(minNeigh); // Tune this
         pcl::PointCloud<pcl::PointXYZI>::Ptr filteredRadiusOutlierRemoval(new pcl::PointCloud<pcl::PointXYZI>);
         filter.filter(*filteredRadiusOutlierRemoval);
         nonGroundCloud = filteredRadiusOutlierRemoval;
@@ -197,8 +197,8 @@ public:
 
         // Now cluster pointcloud into seperate trunks first
 
-        ec.setClusterTolerance(0.3); //
-        ec.setMinClusterSize(20);    //
+        ec.setClusterTolerance(0.1); // aug 4 = 0.3
+        ec.setMinClusterSize(10);    // aug4 = 20
         ec.setMaxClusterSize(1000);  //   60 was good.
 
         ec.setInputCloud(nonGroundCloud); //
