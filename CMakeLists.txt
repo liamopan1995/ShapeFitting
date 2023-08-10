@@ -61,6 +61,9 @@ include_directories(
         include
 )
 
+
+# add_library( CircleClustering ${PROJECT_NAME}/include/utilities/CircleCluster.hpp )
+
 # start of modification
 ## Declare a C++ library
 # add_library(${PROJECT_NAME} src/patchworkpp.cpp )
@@ -87,7 +90,7 @@ add_dependencies(groundStemSeg patchworkpp_generate_messages_cpp)
 # added following 3 loc.
 add_executable(CloudSegmentaion src/CloudSegmentaion.cpp)
 target_link_libraries(CloudSegmentaion ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
-add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp)
+add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp )
 
 
 add_executable(EuclideanClustering src/EuclideanClustering.cpp)
