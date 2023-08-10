@@ -220,7 +220,7 @@ public:
                 pcl::PointXYZRGB point;
                 point.x = nonGroundCloud->points[index].x;
                 point.y = nonGroundCloud->points[index].y;
-                point.z = 0.0;
+                point.z = nonGroundCloud->points[index].intensity;
                 //point.intensity = nonGroundCloud->points[index].intensity;
                 // Zvalue.push_back(nonGroundCloud->points[index].z);
 
