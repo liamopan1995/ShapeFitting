@@ -55,7 +55,7 @@ private:
     std::vector<pcl::PointIndices> cluster_indices;         // store the cluster indice
 
     /********    For Circle clustering        ********/
-    
+
     std::vector<pcl::PointIndices> cluster_indices_stem;
     std::vector<pcl::PointIndices> cluster_indices_circle;
     pcl::PointCloud<pcl::PointXYZLNormal>::Ptr clustered_cloud_stem;      // cloud of points in one stem
@@ -270,17 +270,11 @@ public:
 
     void circleClustering( )
     /*    
-    this function doesnt perform very well   and runs rather slow , it could be better to consider
-    clustering based on the difference of z values
-    ...
-
-    .....
+    This function is used to further cluster a single stem group into groups , where points in each of those groups likely 
+    form a circle.
      */
     {
 
-        // // Clear the point cloud before clustering
-        // clustered_cloud_frame->clear();
-        // Zvalue.clear();
         pcl::EuclideanClusterExtraction<pcl::PointXYZLNormal> ec;
 
         // Now cluster pointcloud into seperate trunks first
@@ -325,6 +319,11 @@ public:
     }
 
     void stemClustering()
+    /*    
+    This function is used to cluster points into groups, where points each of them likely forms a stem, from the whole pointcloud
+     which is recognized as stems.
+    TODO: add a tag here , so it is allowed to control whetehr the colored pointcloud should be generated and published for validation.
+     */
     {
 
         // Clear the point cloud before clustering
