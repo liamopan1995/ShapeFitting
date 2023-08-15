@@ -12,6 +12,7 @@ The CloudSegmentation.cpp file has been updated,  so that it can further cluster
 ## CircleFitting 
 - Circle fitting algorithms implementation and the helper function are in folder : Circle_Fitting_CPP
 - Visualization and Validations of algorithms of 2D/3D circle fittings are in colab file : DiskFitting.ipynd
+- You can access the Colab notebook [here](https://colab.research.google.com/drive/1mpwGbVmmLUSy8GPRjVKwKurZ131K-x20?usp=sharing).
 
 
 
