@@ -96,6 +96,9 @@ add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp )
 add_executable(EuclideanClustering src/EuclideanClustering.cpp)
 target_link_libraries(EuclideanClustering ${catkin_LIBRARIES})
 
+# testing tranfer gps to coordinates 
+add_executable(GpsImuIntegal src/GpsImuIntegal.cpp)
+target_link_libraries(GpsImuIntegal ${catkin_LIBRARIES} )
 # ==== Install ====
 
 # start of modification
