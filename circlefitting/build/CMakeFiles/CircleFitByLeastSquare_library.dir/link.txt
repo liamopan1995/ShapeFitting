@@ -1,0 +1,2 @@
+/usr/bin/ar qc libCircleFitByLeastSquare_library.a  CMakeFiles/CircleFitByLeastSquare_library.dir/CircleFitByLeastSquare.cpp.o
+/usr/bin/ranlib libCircleFitByLeastSquare_library.a

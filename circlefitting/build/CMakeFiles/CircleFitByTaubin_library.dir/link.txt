@@ -1,0 +1,2 @@
+/usr/bin/ar qc libCircleFitByTaubin_library.a  CMakeFiles/CircleFitByTaubin_library.dir/CircleFitByTaubin.cpp.o
+/usr/bin/ranlib libCircleFitByTaubin_library.a
