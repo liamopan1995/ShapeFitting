@@ -1,2 +1,0 @@
-/usr/bin/ar qc libCircleFitByKasa_library.a  CMakeFiles/CircleFitByKasa_library.dir/CircleFitByKasa.cpp.o
-/usr/bin/ranlib libCircleFitByKasa_library.a

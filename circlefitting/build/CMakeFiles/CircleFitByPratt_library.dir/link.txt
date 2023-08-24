@@ -1,2 +1,0 @@
-/usr/bin/ar qc libCircleFitByPratt_library.a  CMakeFiles/CircleFitByPratt_library.dir/CircleFitByPratt.cpp.o
-/usr/bin/ranlib libCircleFitByPratt_library.a

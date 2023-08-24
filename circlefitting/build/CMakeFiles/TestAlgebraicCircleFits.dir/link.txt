@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/TestAlgebraicCircleFits.dir/TestAlgebraicCircleFits.cpp.o  -o TestAlgebraicCircleFits  libCircleFitByLeastSquare_library.a libCircleFitByHyper_library.a libCircleFitByKasa_library.a libCircleFitByPratt_library.a libCircleFitByTaubin_library.a 

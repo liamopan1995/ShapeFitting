@@ -1,9 +1,0 @@
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/edit_cache.dir
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/TestAlgebraicCircleFits.dir
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/Test_vector_input.dir
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/CircleFitByTaubin_library.dir
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/CircleFitByKasa_library.dir
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/rebuild_cache.dir
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/CircleFitByPratt_library.dir
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/CircleFitByHyper_library.dir
-/home/liam/git/CppExercises/circlefitting/build/CMakeFiles/CircleFitByLeastSquare_library.dir
