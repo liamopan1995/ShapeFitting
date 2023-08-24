@@ -17,9 +17,9 @@ const reals REAL_MIN=numeric_limits<reals>::min();
 const reals REAL_EPSILON=numeric_limits<reals>::epsilon();
 
 
-"""
+/*
 Class definition
-"""
+*/
 class Circle
 {
 public:
@@ -66,14 +66,14 @@ Circle::Circle(reals aa, reals bb, reals cc, reals rr)
 
 
 void Circle::computeMSE_3d(const Eigen::Matrix<float, Eigen::Dynamic, 3>& dataPoints)
-"""
+/*
 This function computes the Mean Squared Error (MSE) given a set of data points and an estimated circle.
 
 Formula : MSE = mean (  sqrt (  sqrt( (P-center)^2) -radius )^2 ) 
 
 Parameters:
 	dataPoints (Eigen::Matrix<float, Eigen::Dynamic, 3>&): A matrix containing data points, where each row represents a point with (x, y, z) coordinates.
-"""
+*/
 {
 
     Eigen::Vector3f center(Px, Py, Pz);
@@ -88,15 +88,14 @@ Parameters:
 }
 
 void Circle::computeMSE_2d(const Eigen::MatrixXf & dataPoints)
-"""
+/*
 This function computes the Mean Squared Error on rotated plane (MSE) given a set of data points and an estimated circle.
 
 MSE = mean (  sqrt (  sqrt( (P-C)^2) -r )^2 )
 
 Parameters:
 	dataPoints (Eigen::Matrix<float, Eigen::Dynamic, 3>&): A matrix containing points in 2d shape <n, 2>
-
-"""
+*/
 {
     
     Eigen::Vector2f center(Px, Py);
@@ -127,10 +126,10 @@ void Circle::print(void)
 // 2D fitting algorithms
 
 Circle CircleFitByLeastSquare_vectorized(Eigen::MatrixXf P)
-  """
+/*
   algorithm :Least Square
   source : 
-  """
+*/
 {
     Circle circle;
     Eigen::MatrixXf A (P.rows(),3);// A = P , but with P's all element in its third colum set to 1  
@@ -154,11 +153,11 @@ Circle CircleFitByLeastSquare_vectorized(Eigen::MatrixXf P)
 }
 
 Circle CircleFitByHyper_vectorized (Eigen::MatrixXf P)
-  """
+/*
   algorithm :Hyper fit  by N. Chernov
   updated from source : https://people.cas.uab.edu/~mosya/cl/CircleFitByHyper.cpp
   original code was not written by using Eigen
-  """
+*/
 
 {
     int i,iter,IterMAX=99;
@@ -238,9 +237,9 @@ Circle CircleFitByHyper_vectorized (Eigen::MatrixXf P)
 // Ultilities for applying circle fitting in 3d space
 
 void fit_plane( Eigen::Matrix<float, Eigen::Dynamic, 3>& P, Eigen::Vector3f& P_mean, Eigen::Vector3f& normal) 
-  """
+/*
 This function takes points and find its centriod, then centralize the P by it, and find the normal vector of the plane that most points are close to 
-  """
+*/
 {
     // Centralizing
     P_mean = P.colwise().mean(); // Calculate mean along columns
@@ -255,18 +254,18 @@ This function takes points and find its centriod, then centralize the P by it, a
 
 
 
-"""
+/*
             The following three rodrigues_rot function implementations just do the same thing.
             only their implementations differ, 
             but when input size is big , it is prefered to call the ___lib ,oppsites it is better to call ___original.
-"""
+*/
 
 
 Eigen::MatrixXf rodrigues_rot_original(const Eigen::MatrixXf& P, const Eigen::Vector3f& n0, const Eigen::Vector3f& n1)
-"""
+/*
     This function takes and then rotates the points in 3d from the plane defined by n0 , 
     onto the X-Y plane ,it returns a matrix of shape (n,3)
-"""
+*/
 {
 
     Eigen::MatrixXf P_rot = Eigen::MatrixXf::Zero(P.rows(), 3);
@@ -297,10 +296,10 @@ Eigen::MatrixXf rodrigues_rot_original(const Eigen::MatrixXf& P, const Eigen::Ve
 
 
 Eigen::MatrixXf rodrigues_rot_vec(const Eigen::MatrixXf& P, const Eigen::Vector3f& n0, const Eigen::Vector3f& n1) 
-"""
+/*
     This function takes and then rotates the points in 3d on the plane defined by n0 , 
     onto the X-Y plane ,it returns a matrix of shape (n,3)
-"""
+*/
 {
     Eigen::MatrixXf P_rot = Eigen::MatrixXf::Zero(P.rows(), 3);
     Eigen::Vector3f n0_norm =  n0.normalized(); // -1 *
@@ -331,10 +330,10 @@ Eigen::MatrixXf rodrigues_rot_vec(const Eigen::MatrixXf& P, const Eigen::Vector3
 
 
 Eigen::MatrixXf rodrigues_rot_lib(const Eigen::MatrixXf& P, const Eigen::Vector3f& n0, const Eigen::Vector3f& n1) 
-"""
+/*
     This function takes and then rotates the points in 3d from the plane defined by n0 , 
     onto the X-Y plane ,it returns a matrix of shape (n,3)
-"""
+*/
 {
     Eigen::MatrixXf P_rot = Eigen::MatrixXf::Zero(P.rows(), 3);
     Eigen::Matrix3f rot_matrix;
@@ -355,7 +354,7 @@ Eigen::MatrixXf rodrigues_rot_lib(const Eigen::MatrixXf& P, const Eigen::Vector3
 
 
 Circle CircleFitting_3D( Eigen::Matrix<float, Eigen::Dynamic, 3> P)
-""" 
+/*
     A wrapper function, which does so by the following steps:
 
         1. Take a set of points <x,y,z>  : P 
@@ -365,8 +364,7 @@ Circle CircleFitting_3D( Eigen::Matrix<float, Eigen::Dynamic, 3> P)
         5. Rerotate the circle back to 3D, and updates its coeffients accordingly.(rodrigues_rot is used again for this procedure)
         6. Ajust its normal so it alway points up towards the sky ,and write it into the circle
         7. Compute the fitted circle's MSE value and save it.
-
-"""
+*/
 {   
     // Place holders
     Circle circle;
