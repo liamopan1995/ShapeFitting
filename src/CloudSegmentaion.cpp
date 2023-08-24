@@ -277,11 +277,11 @@ public:
 
         pcl::EuclideanClusterExtraction<pcl::PointXYZLNormal> ec;
 
-        // Now cluster pointcloud into seperate trunks first
+        // Now cluster pointcloud into seperate circles according to z value
 
-        ec.setClusterTolerance(0.1); // aug 4 = 0.3
-        ec.setMinClusterSize(4);    // aug4 = 20
-        ec.setMaxClusterSize(1000);  //   60 was good.
+        ec.setClusterTolerance(0.1); 
+        ec.setMinClusterSize(4);     
+        ec.setMaxClusterSize(1000);  
 
         ec.setInputCloud(clustered_cloud_stem); //
         cluster_indices_circle.clear();
@@ -309,7 +309,14 @@ public:
 
                 point.rgb = *reinterpret_cast<float *>(&rgb_value); // Set RGB value
                 clustered_cloud->points.push_back(point); 
+
+
+                // Here we can store the points belonging to the same circle into our data structure: circle
+
+
             }
+            // Here we further store the circle into a data structure : stem
+
             //  The clustered_cloud_circle now is containing several clusters of points, each cluster stand for a circle
             // clustered_cloud_circle is ready for circle fitting 
 
@@ -365,17 +372,8 @@ public:
             /**** Do another clustering on point , to get clusters of circle  in each cluster ****/
 
             circleClustering();  // Returns  cluster_indices
-
-                // for (auto : cluster_indices) 
-
-                // {    // construct a point cloud with color for visualizing 
-
-                        // do circle fitting 
-                        // build circle struct 
-
-                        // push the fitted circle into a vector 
-                // }
-
+            //  Here we further store the stems into our structe  : frame or scan
+            
 
         }
 

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libCircleFitByHyper_library.a  CMakeFiles/CircleFitByHyper_library.dir/CircleFitByHyper.cpp.o
+/usr/bin/ranlib libCircleFitByHyper_library.a

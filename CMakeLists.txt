@@ -9,8 +9,8 @@ cmake_minimum_required(VERSION 3.0.2)
 project(patchworkpp)
 
 add_compile_options(-std=c++17)
-set(CMAKE_BUILD_TYPE "Release")
-
+#set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -49,7 +49,7 @@ if (OPENMP_FOUND)
 endif()
 
 catkin_package(
-        INCLUDE_DIRS
+        INCLUDE_DIRS include
         LIBRARIES
         CATKIN_DEPENDS roscpp rospy std_msgs
 )
@@ -61,6 +61,8 @@ include_directories(
         include
 )
 
+#  For Cmake is able to find files under include folder
+include_directories( ${PROJECT_SOURCE_DIR}/include )
 
 # add_library( CircleClustering ${PROJECT_NAME}/include/utilities/CircleCluster.hpp )
 
@@ -97,8 +99,10 @@ add_executable(EuclideanClustering src/EuclideanClustering.cpp)
 target_link_libraries(EuclideanClustering ${catkin_LIBRARIES})
 
 # testing tranfer gps to coordinates 
-add_executable(GpsImuIntegal src/GpsImuIntegal.cpp)
-target_link_libraries(GpsImuIntegal ${catkin_LIBRARIES} )
+add_executable(GpsImuIntegral src/GpsImuIntegral.cpp)
+target_link_libraries(GpsImuIntegral ${catkin_LIBRARIES} )
+
+
 # ==== Install ====
 
 # start of modification
