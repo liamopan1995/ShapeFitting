@@ -23,6 +23,8 @@ Class definition
 class Circle
 {
 public:
+    // MSE Threshold
+    static constexpr reals MSE_MAX = 0.1;
 
 	// The fields of a Circle
 	reals Px, Py, Pz, r, s;  // (Px,Py,Pz) : center coordinates , r: radius , s : MSE value
@@ -81,7 +83,7 @@ Parameters:
 
     s  = (squaredDistances.array().sqrt() - r).array().square().sqrt().mean();
     // Print for testing
-    std::cout<<"\n MSE 3d :\n"<<(squaredDistances.array().sqrt() - r).array().square().sqrt().mean();
+    // std::cout<<"\n MSE 3d :\n"<<(squaredDistances.array().sqrt() - r).array().square().sqrt().mean();
 	
 
 
@@ -105,7 +107,7 @@ Parameters:
     // s  = (squaredDistances.array().sqrt() - r).array().square().sqrt().mean();
 
     // Print for testing
-	std::cout<<"\n MSE 2d :\n"<<(squaredDistances.array().sqrt() - r).array().square().sqrt().mean()<<std::endl;
+	// std::cout<<"\n MSE 2d :\n"<<(squaredDistances.array().sqrt() - r).array().square().sqrt().mean()<<std::endl;
 
 }
 
