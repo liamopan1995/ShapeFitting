@@ -70,6 +70,7 @@ private:
     pcl::PointCloud<PointType>::Ptr nonGroundCloud;
     pcl::PointCloud<PointType>::Ptr stemCloud;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr clustered_cloud; // Place holder pointXYZRGB.. // TRY : pointcloud XYZRGBA latter
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cylinder_cloud;
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr single_circle_cloud;
     std::vector<pcl::PointIndices> cluster_indices;         // store the cluster indice
 
@@ -120,6 +121,7 @@ public:
         nonGroundCloud.reset(new pcl::PointCloud<PointType>);
         stemCloud.reset(new pcl::PointCloud<PointType>);
         clustered_cloud.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
+        cylinder_cloud.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
         single_circle_cloud.reset(new pcl::PointCloud<pcl::PointXYZRGB>);
 
         /****  for circle clustering *****/
@@ -143,6 +145,7 @@ public:
         nonGroundCloud->clear();
         stemCloud->clear();
         clustered_cloud->clear();
+        cylinder_cloud->clear();
         single_circle_cloud->clear();
         std::fill(laserCloudIn->points.begin(), laserCloudIn->points.end(), nanPoint);
     }
@@ -304,6 +307,9 @@ public:
         // //Generate a random RGB color
         int32_t rgb_value = generateRandomRGB();
 
+        //int num_circle =0;
+        Stem stem_candidate;
+        cylinder_cloud->clear();
         for (const pcl::PointIndices &cluster : cluster_indices_circle)
         {   
             if(viewmode==1){
@@ -333,24 +339,40 @@ public:
             End of cylinder clusters (made of points) visualizer
             */
 
+            
+            // Following is the Original way of adding previously unkown size of points into a matrix
 
             // Dynamic-sized matrix for points on which a circle is to be fitted 
-            Eigen::Matrix<reals, Eigen::Dynamic, 3> points_to_fit; 
-            Circle circle;
-            // Writting all points into a matrix , for esitmating the fitted circle 
-            for (const int index : cluster.indices) {
-                points_to_fit.conservativeResize(points_to_fit.rows() + 1, Eigen::NoChange);  // Add a row
-                points_to_fit.row(points_to_fit.rows() - 1) << clustered_cloud_stem->points[index].normal_x, clustered_cloud_stem->points[index].normal_y, clustered_cloud_stem->points[index].z;
+            // Eigen::Matrix<reals, Eigen::Dynamic, 3> points_to_fit; 
+            
+            // // Writting all points into a matrix , for esitmating the fitted circle 
+            // for (const int index : cluster.indices) {
+            //     points_to_fit.conservativeResize(points_to_fit.rows() + 1, Eigen::NoChange);  // Add a row
+            //     points_to_fit.row(points_to_fit.rows() - 1) << clustered_cloud_stem->points[index].normal_x, clustered_cloud_stem->points[index].normal_y, clustered_cloud_stem->points[index].z;
+            // }
+
+            Eigen::Matrix<reals, Eigen::Dynamic, 3> points_to_fit(cluster.indices.size(), 3);
+
+            for (size_t i = 0; i < cluster.indices.size(); ++i) {
+                int index = cluster.indices[i];
+                points_to_fit.row(i) << clustered_cloud_stem->points[index].normal_x,
+                                        clustered_cloud_stem->points[index].normal_y,
+                                        clustered_cloud_stem->points[index].z;
             }
 
-            // Fit a circle on this points
-            circle = CircleFitting_3D(points_to_fit);
 
+
+
+            // Fit a circle on this points
+            Circle circle = CircleFitting_3D(points_to_fit);
+
+            
             if(viewmode==2){
             /*
             Start of cylinder (made of circles) visualizer
             */
                 // See if the result is a valid circle
+                
                 if (circle.s <= Circle::MSE_MAX && circle.r <0.4) {
 
 
@@ -379,13 +401,31 @@ public:
                         single_circle_cloud->points.push_back(point);//
 
                     }
+                    cylinder_cloud->insert(cylinder_cloud->end(), single_circle_cloud->begin(), single_circle_cloud->end());
+                    stem_candidate.pushCircle(std::move(circle));
+                    // TODO: update the variance of radius, mse, and center(center may not helpful , when taking tilt trees into consideration )
+                    // it is critical to be clear with, wether we want is to be able to recognize more trees or, 
+                    // to recognize more reliable but meanwhiles less trees,
+                    // if we use ICP, which of the two decisions benifits us more?
 
                 }
 
 
                 // Insert the points from single_circle_cloud into clustered_cloud for display
-                clustered_cloud->insert(clustered_cloud->end(), single_circle_cloud->begin(), single_circle_cloud->end());
+
+                if(stem_candidate.num_circle > 6)
+                {
+                /*
+                Using derivation/variance of radii , and min_num of circles in cluester as threshold/criterien to valid stems, 
+                To Do: add radii criterion 
+                Could averagee/variance of mse also be benificial ?
+                */  stem_candidate.get_averages();
+                    stem_candidate.get_standard_deviation();
+                    stem_candidate.print();
+                    clustered_cloud->insert(clustered_cloud->end(), cylinder_cloud->begin(), cylinder_cloud->end());            
+                }
             }
+            
             /*
             End of cylinder (made of circles)  visualizer
             */
@@ -406,6 +446,7 @@ public:
 
         // Clear the point cloud before clustering
         clustered_cloud->clear();
+        // cylinder_cloud->clear();
         pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
         // Now cluster pointcloud into seperate trunks first
 

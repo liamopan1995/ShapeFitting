@@ -110,7 +110,7 @@ inline void LLtoUTM(const double Lat, const double Long,
 
         //compute the UTM Zone from the latitude and longitude
         snprintf(UTMZone, 4, "%d%c", ZoneNumber, UTMLetterDesignator(Lat));
-        std::cout << UTMZone << std::endl;
+        //std::cout << UTMZone << std::endl;
         eccPrimeSquared = (eccSquared)/(1-eccSquared);
 
         N = a/sqrt(1-eccSquared*sin(LatRad)*sin(LatRad));

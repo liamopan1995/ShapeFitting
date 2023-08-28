@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 typedef float reals; 
@@ -24,7 +25,7 @@ class Circle
 {
 public:
     // MSE Threshold
-    static constexpr reals MSE_MAX = 0.1;
+    static constexpr reals MSE_MAX = 0.56;// =0.1
 
 	// The fields of a Circle
 	reals Px, Py, Pz, r, s;  // (Px,Py,Pz) : center coordinates , r: radius , s : MSE value
@@ -34,11 +35,56 @@ public:
 	// constructors
 	Circle();
 	Circle(reals aa, reals bb, reals cc, reals rr);
+    // Move constructor
+    Circle(Circle&& other) noexcept;
+    // Move assignment operator
+    Circle& operator=(Circle&& other) noexcept ;
+
+
 
 	// helpers
 	void computeMSE_3d(const Eigen::Matrix<float, Eigen::Dynamic, 3>& dataPoints);
 	void computeMSE_2d(const Eigen::MatrixXf & dataPoints);
 	Eigen::Matrix<float, Eigen::Dynamic, 3> generate_circle(void);
+
+	// routines
+	void print(void);
+
+	// no destructor we didn't allocate memory by hand.
+};
+
+
+
+
+class Stem
+{
+public:
+
+    // The fields of a Stem
+    std::vector<Circle> vector_circles;
+    int num_circle;
+	reals Px_av, Py_av, Pz_av,r_av, s_av;  // Aveeraged(Px,Py,Pz) : center coordinates , r: radius , s : MSE value
+    reals Px_sd, Py_sd, Pz_sd,r_sd, s_sd;  
+    reals Px_bottom,Py_bottom,Pz_bottom;
+    reals Px_top,Py_top,Pz_top;
+	Eigen::Vector3f  normal_av; 
+
+    // Constructors
+    Stem() : num_circle(0),Px_av(0), Py_av(0), Pz_av(0), r_av(0), s_av(0), 
+    Px_bottom(0),Py_bottom(0),Pz_bottom(std::numeric_limits<reals>::max()),Px_top(0),Py_top(0),Pz_top(std::numeric_limits<reals>::lowest()),
+    Px_sd(0), Py_sd(0), Pz_sd(0),r_sd(0), s_sd(0) {
+    }
+
+
+
+    void pushCircle(Circle&& circle) {
+        vector_circles.push_back(std::move(circle));
+        num_circle++;
+    }
+
+	// helpers
+    void get_averages(int MIN_NUM_CIRCLE=6);
+    void get_standard_deviation(int MIN_NUM_CIRCLE=6);
 
 	// routines
 	void print(void);
@@ -67,6 +113,7 @@ Circle::Circle(reals aa, reals bb, reals cc, reals rr)
 }
 
 
+
 void Circle::computeMSE_3d(const Eigen::Matrix<float, Eigen::Dynamic, 3>& dataPoints)
 /*
 This function computes the Mean Squared Error (MSE) given a set of data points and an estimated circle.
@@ -88,6 +135,32 @@ Parameters:
 
 
 }
+
+
+
+
+// Move constructor
+Circle::Circle(Circle&& other) noexcept
+        : Px(other.Px), Py(other.Py), Pz(other.Pz), r(other.r), s(other.s),
+          normal(std::move(other.normal)) {
+        // Other resource transfers if needed
+    }
+
+// Move assignment operator
+Circle& Circle::operator=(Circle&& other) noexcept {
+    if (this != &other) {
+        Px = other.Px;
+        Py = other.Py;
+        Pz = other.Pz;
+        r = other.r;
+        s = other.s;
+        normal = std::move(other.normal);
+        // Other resource transfers if needed
+    }
+    return *this;
+}
+
+
 
 void Circle::computeMSE_2d(const Eigen::MatrixXf & dataPoints)
 /*
@@ -411,6 +484,71 @@ Circle CircleFitting_3D( Eigen::Matrix<float, Eigen::Dynamic, 3> P)
     circle.computeMSE_3d(P_ori);  
 
     return circle;
+}
+
+
+
+
+
+void Stem::get_averages(int MIN_NUM_CIRCLE){
+    if (num_circle >MIN_NUM_CIRCLE){
+        for(const auto& circle: vector_circles)
+        {
+            Px_av += circle.Px;
+            Py_av += circle.Py;
+            Pz_av += circle.Pz;
+            r_av += circle.r;
+            s_av += circle.s; 
+            if(circle.Pz>Pz_top)
+            {
+                Pz_top=circle.Pz;
+                Px_top=circle.Px;Py_top=circle.Py;     
+            }
+            if(circle.Pz<Pz_bottom)
+            {
+                Pz_bottom=circle.Pz;
+                Px_bottom=circle.Px;Py_bottom=circle.Py;
+            }
+        }
+        Px_av /=num_circle;
+        Py_av /=num_circle;
+        Pz_av /=num_circle;
+        r_av /=num_circle;
+        s_av /=num_circle;
+    }
+
+}
+
+void Stem::get_standard_deviation(int MIN_NUM_CIRCLE) {
+    if (num_circle > MIN_NUM_CIRCLE) {
+        for (const auto& circle : vector_circles) {
+            Px_sd += (circle.Px - Px_av) * (circle.Px - Px_av);
+            Py_sd += (circle.Py - Py_av) * (circle.Py - Py_av);
+            Pz_sd += (circle.Pz - Pz_av) * (circle.Pz - Pz_av);
+            r_sd += (circle.r - r_av) * (circle.r - r_av);
+            s_sd += (circle.s - s_av) * (circle.s - s_av);
+        }
+
+        Px_sd = std::sqrt(Px_sd / (num_circle-1));
+        Py_sd = std::sqrt(Py_sd / (num_circle-1));
+        Pz_sd = std::sqrt(Pz_sd / (num_circle-1));
+        r_sd = std::sqrt(r_sd / (num_circle-1));
+        s_sd = std::sqrt(s_sd / (num_circle-1));
+    }
+}
+// Printing routine
+void Stem::print(void)
+{
+	cout << "\n      Stem info:\n"<<endl;
+    cout<<  "num of circles in this stem:\n"<<num_circle<<endl;
+	cout << setprecision(10) << "\naveraged center (" <<Px_av <<","<< Py_av <<","<< Pz_av<<")  ave radius " 	<< r_av 
+    << "\nave MSE: " << s_av
+    <<"\n standard deviation center: (" <<Px_sd <<","<< Py_sd <<","<< Pz_sd<<")  sd radius " 	<< r_sd 
+    << "\nsd MSE: " << s_sd
+    << "\n top center:(" <<Px_top <<","<< Py_top <<","<< Pz_top<<")"
+    << "\n bottom center:(" <<Px_bottom <<","<< Py_bottom <<","<< Pz_bottom<<")"<<endl;
+    
+	// cout <<"normal vector\n"<< normal << endl;
 }
 
 

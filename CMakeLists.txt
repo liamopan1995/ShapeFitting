@@ -42,6 +42,7 @@ generate_messages(
 find_package(PCL 1.7 REQUIRED)
 find_package(Boost 1.54 REQUIRED)
 find_package(OpenMP)
+find_package(Sophus REQUIRED) 
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -58,6 +59,7 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
+        ${Sophus_INCLUDE_DIRS}
         include
 )
 
@@ -95,13 +97,13 @@ target_link_libraries(CloudSegmentaion ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${Op
 add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp )
 
 
-add_executable(EuclideanClustering src/EuclideanClustering.cpp)
-target_link_libraries(EuclideanClustering ${catkin_LIBRARIES})
-
 # testing tranfer gps to coordinates 
 add_executable(GpsImuIntegral src/GpsImuIntegral.cpp)
-target_link_libraries(GpsImuIntegral ${catkin_LIBRARIES} )
+target_link_libraries(GpsImuIntegral ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 
+
+add_executable(ImuIntegral src/imuIntegal.cpp)
+target_link_libraries(ImuIntegral ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 
 # ==== Install ====
 
