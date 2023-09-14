@@ -4,6 +4,8 @@
 #include "utilities/toUTM.hpp"
 #include <nav_msgs/Path.h>
 #include "sophus/so3.h"
+#include <iomanip>
+#include <fstream>
 
 Eigen::Vector3d pos = Eigen::Vector3d(0,0,0);
 Sophus::SO3     rot = Sophus::SO3(Eigen::Matrix3d::Identity());
@@ -27,6 +29,16 @@ ros::Time lastDebugPrintTime;
 
 ros::Publisher path_publisher_gps;
 ros::Publisher path_publisher_imu;
+nav_msgs::Path path_msg;
+
+// Define a struct to store IMU data
+struct UTMData {
+    double timestamp_;
+    Eigen::Vector3d p_;
+};
+
+std::vector<UTMData> utm_data; // Store IMU data
+
 
 
 void GPSCallback(const sensor_msgs::NavSatFix::ConstPtr& msg_in)
@@ -51,35 +63,53 @@ void GPSCallback(const sensor_msgs::NavSatFix::ConstPtr& msg_in)
 
     // for debugging use :
     std::cout << "\nGPS Data: Lat=" << latitude << ", Lon=" << longitude << ", Alt=" << altitude << std::endl;
-    // UTMNorthing -= (5.424e+06); //normalize
-    // UTMEasting -= (463800);
+
     std::cout <<" \nUTMEasting(x): "<<UTMEasting -first_UTMEasting<<" \nUTMNorthing(y): "<< UTMNorthing -first_UTMNorthing<<std::endl;
 
 
 
 
-    // TODO 
-    // visualize the path
+
 
     // Create a nav_msgs::Path message to store the GPS data as a path
-    nav_msgs::Path path_msg;
+    path_msg.header.stamp = ros::Time::now();
     path_msg.header = msg_in->header; // Set the header of the Path message
 
     // this line is for testing purpose
-    path_msg.header.frame_id = "velodyne";   
+    path_msg.header.frame_id = "world";   
 
 
     // Create a geometry_msgs::PoseStamped message to store each pose (GPS data point)
     geometry_msgs::PoseStamped pose_stamped;  
     pose_stamped.header = path_msg.header; // Set the header of the PoseStamped message
-    pose_stamped.pose.position.x = UTMEasting ; // Use UTMEasting as the x-coordinate   
-    pose_stamped.pose.position.y = UTMNorthing ; // Use UTMNorthing as the y-coordinate
+
+    pose_stamped.pose.position.x = (UTMEasting -first_UTMEasting ); // Use UTMEasting as the x-coordinate   
+    pose_stamped.pose.position.y = (UTMNorthing -first_UTMNorthing); // Use UTMNorthing as the y-coordinate
+
+    // pose_stamped.pose.position.x = -(UTMEasting -first_UTMEasting ); // Use UTMEasting as the x-coordinate   
+    // pose_stamped.pose.position.y = -(UTMNorthing -first_UTMNorthing); // Use UTMNorthing as the y-coordinate
+
+    // align utm to imu ( choosing the solid axis as the world frame)
+    // pose_stamped.pose.position.x = -(UTMEasting -first_UTMEasting ); // Use UTMEasting as the x-coordinate   
+    // pose_stamped.pose.position.y = -(UTMNorthing -first_UTMNorthing); // Use UTMNorthing as the y-coordinate
+
+    // rotate  
+    // auto z = pose_stamped.pose.position.x ;
+    // pose_stamped.pose.position.x = -pose_stamped.pose.position.y;
+    // pose_stamped.pose.position.y = z;
+
     pose_stamped.pose.position.z = altitude; // Use altitude as the z-coordinate
     // Add the pose_stamped message to the path_msg
     path_msg.poses.push_back(pose_stamped);
     // Publish the path_msg
 
     path_publisher_gps.publish(path_msg);
+
+    UTMData utm_data_point;
+    utm_data_point.timestamp_ = msg_in->header.stamp.toSec();
+    utm_data_point.p_(0) =  pose_stamped.pose.position.x ;
+    utm_data_point.p_(1) =  pose_stamped.pose.position.y ;
+    utm_data.push_back( utm_data_point);
 
 }
 
@@ -163,5 +193,31 @@ int main(int argc, char** argv)
   //path_publisher_imu = nh.advertise<sensor_msgs::Imu>("imu_path", 1000);
 
   ros::spin();
-  return 0;
+  
+    // Save IMU data to a text file
+
+        // Get user's home directory
+    const char* homeDir = getenv("HOME");
+    if (!homeDir) {
+        std::cerr << "Error: HOME environment variable not set." << std::endl;
+        return 1;
+    }
+
+    // Construct the desired path
+    std::string fullPath = std::string(homeDir) + "/slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/state_utm.txt";
+
+    // Open the file for writing
+    std::ofstream fout(fullPath);
+    if (!fout) {
+        std::cerr << "Error: Unable to open file for writing." << std::endl;
+        return 1;
+    }
+    for (const UTMData& utm_point : utm_data) {
+        fout << std::setprecision(18) << utm_point.timestamp_ << " " << std::setprecision(9)
+             << utm_point.p_[0] << " " << utm_point.p_[1] << " " <<0 << " " <<1 << " " <<0 << " " <<0 << " " <<0<<std::endl;
+    }
+
+
+
+    return 0;
 }

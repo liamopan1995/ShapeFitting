@@ -11,6 +11,14 @@
 
 using namespace Eigen;
 
+float sx =0;
+float sy =0;
+float vx =0;
+float vy =0;
+float sphi =0;
+float vphi =0;
+float wphi =0;
+
 Sophus::SO3 rot = Sophus::SO3(Eigen::Matrix3d::Identity());
 Eigen::Vector3d pos = Eigen::Vector3d(0, 0, 0);
 Eigen::Vector3d vel = Eigen::Vector3d(0, 0, 0);
@@ -33,6 +41,7 @@ const double stationary_duration = 1.0; // in seconds
 bool init_flag = false;
 bool first_time_flag = false;
 double firstTimeStamp = 0.;
+
 // Define a struct to store IMU data
 struct IMUData {
     double timestamp_;
@@ -115,47 +124,38 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg_in) {
                                        msg_in->linear_acceleration.y,
                                        msg_in->linear_acceleration.z);
 
+    rot = Sophus::SO3 (Eigen::Quaterniond(msg_in->orientation.w,msg_in->orientation.x,msg_in->orientation.y,msg_in->orientation.z));
+
+    Eigen::Vector3d angular_velocity_world = rot*angular_velocity;
+    Eigen::Vector3d linear_velocity_world = rot*linear_acceleration;
+    // float wphi = angular_velocity_world(2);
+    // float a = linear_velocity_world(0);
+
+    float wphi = msg_in->angular_velocity.z;
+    float a = msg_in->linear_acceleration.x;
+
+    std::cout<<"linear acceleration a :"<<a <<"\n";
     if (dt > 0 && dt < 0.1) {
-        // Update the position
-        pos += vel * dt + 0.5 * grav * dt * dt + 0.5 * (rot * (linear_acceleration - ba)) * dt * dt;
-        // Update the velocity
-        vel += (rot * (linear_acceleration - ba) + grav) * dt; // 
-        // Update the rotation
-        Sophus::SO3 dR = Sophus::SO3::exp((angular_velocity - bg) * dt); // 
-        rot = rot * dR;
 
 
-        // geometry_msgs::PoseStamped pose;
-        // pose.header.stamp = ros::Time::now();
-        // pose.header.frame_id = "world"; // You can change this frame ID if needed
-        // pose.pose.position.x = pos[0];
-        // pose.pose.position.y = pos[1];
-        // pose.pose.position.z = pos[2];
-        // pose.pose.orientation.x = rot.unit_quaternion().x();
-        // pose.pose.orientation.y = rot.unit_quaternion().y();
-        // pose.pose.orientation.z = rot.unit_quaternion().z();
-        // pose.pose.orientation.w = rot.unit_quaternion().w();
-
-        // // Add the pose to the path
-        // path_msg.header.stamp = ros::Time::now();
-        // path_msg.header.frame_id = "world"; // You can change this frame ID if needed
-        // path_msg.poses.push_back(pose);
-
-        // Publish the path
-        //path_pub.publish(path_msg);
-
-
+        
+        sx += dt*vx;
+        sy += dt*vy;
+        vx += dt*a* cos(sphi);
+        vy += dt*a* sin(sphi);
+        sphi += dt * wphi;
+   
 
         // Store IMU data
         IMUData imu_data_point;
         imu_data_point.timestamp_ = timeStamp;
         //  transform the points  from solid frame to utm frame
-        imu_data_point.R_ = Tsolid2dash*rot;
-        imu_data_point.v_ = Tsolid2dash*vel;
-        imu_data_point.p_ = Tsolid2dash*pos;
-        // imu_data_point.R_ = rot;
-        // imu_data_point.v_ = vel;
-        // imu_data_point.p_ = pos;
+        // imu_data_point.R_ = Tsolid2dash*rot;
+        // imu_data_point.v_ = Tsolid2dash*Eigen::Vector3d (vx,vy,0);
+        // imu_data_point.p_ = Tsolid2dash * Eigen::Vector3d (sx,sy,0);
+        imu_data_point.v_ = Eigen::Vector3d (vx,vy,0);
+        imu_data_point.p_ = Eigen::Vector3d (sx,sy,0);
+
         imu_data.push_back(imu_data_point);
     }
 }
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
     }
 
     // Construct the desired path
-    std::string fullPath = std::string(homeDir) + "/slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/state_imu.txt";
+    std::string fullPath = std::string(homeDir) + "/slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/state_imu_2d.txt";
 
     // Open the file for writing
     std::ofstream fout(fullPath);

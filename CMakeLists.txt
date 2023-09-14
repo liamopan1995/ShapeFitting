@@ -105,6 +105,20 @@ target_link_libraries(GpsImuIntegral ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(ImuIntegral src/imuIntegal.cpp)
 target_link_libraries(ImuIntegral ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 
+
+add_executable(ImuIntegral_2d src/imu_2d.cpp)
+target_link_libraries(ImuIntegral_2d ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
+
+add_executable(ekf_2d src/ekf.cpp)
+target_link_libraries(ekf_2d ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
+
+add_executable(ekf_2d_v2 src/ekf_v2.cpp)
+target_link_libraries(ekf_2d_v2 ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
+
+add_executable(ekf_2d_v3 src/ekf_v3.cpp)
+target_link_libraries(ekf_2d_v3 ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
+# add_executable(new_GPS_IMU_EKF src/new_GPS_IMU_EKF.cpp)
+# target_link_libraries(new_GPS_IMU_EKF ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 # ==== Install ====
 
 # start of modification
