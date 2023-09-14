@@ -4,6 +4,9 @@ IMU typically has much lower variance : Q_
 
 Based on this , some typical values for Q_,V_ and P_  were selected, and run on , results saved as figures.
 
+
+
+ros bag : Fendt516_Thomashof-Road_2023-01-20-10-45-35.bag
 Figure 1 : 
 
 	V_.diagonal()<< 10, 10;
