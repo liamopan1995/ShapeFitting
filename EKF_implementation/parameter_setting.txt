@@ -1,0 +1,50 @@
+
+Single GNSS 's accuracy is believed to be within 3 to 10 meters.   V_
+IMU typically has much lower variance : Q_
+
+Based on this , some typical values for Q_,V_ and P_  were selected, and run on , results saved as figures.
+
+Figure 1 : 
+
+	V_.diagonal()<< 10, 10;
+		  
+	Q_.diagonal() <<  1e-1,  1e-2 ;
+	
+	P: Error_cov::Identity() * 1e-4;
+
+
+
+Figure 2:
+
+	V_.diagonal()<< 15, 15;
+		  
+	Q_.diagonal() <<  1e-2,  1e-3 ;
+	
+	P: Error_cov::Identity() * 1e-2;
+	
+	
+Figure 3:
+
+	V_.diagonal()<< 5, 5;
+		  
+	Q_.diagonal() <<  1e-2,  1e-3 ;
+	
+	P: Error_cov::Identity() * 1e-2;
+	
+	
+Figure 4:
+
+	V_.diagonal()<< 0, 0;
+		  
+	Q_.diagonal() <<  1e-2,  1e-3 ;
+	
+	P: Error_cov::Identity() * 1e-2;
+
+ The Galieo has a accuracy of 0.2 in public ---Wiki pedia  https://en.wikipedia.org/wiki/Satellite_navigation
+Figure 4:
+
+	V_.diagonal()<< 0.3, 0.3;
+		  
+	Q_.diagonal() <<  1e-2,  1e-3 ;
+	
+	P: Error_cov::Identity() * 1e-2;

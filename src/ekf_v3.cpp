@@ -231,6 +231,7 @@ void GPSCallback(const sensor_msgs::NavSatFix::ConstPtr& msg_in) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "imu_integal");
     ros::NodeHandle nh;
+    
     ros::Subscriber subGPS = nh.subscribe("/lernsmart/isobus_read/NavSatFix_in", 10000, GPSCallback);
     ros::Subscriber sub = nh.subscribe("/imu/data", 10000, imuCallback);
 
@@ -250,6 +251,7 @@ int main(int argc, char **argv) {
     }
 
     // Construct the desired path
+    /// Modify the location where the file will be saved as needed
     std::string fullPath = std::string(homeDir) + "/slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/state_imu_2d.txt";
 
     // Open the file for writing
