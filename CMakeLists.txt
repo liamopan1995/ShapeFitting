@@ -11,7 +11,7 @@ project(patchworkpp)
 add_compile_options(-std=c++17)
 #set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14) # was initially 14
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -66,13 +66,13 @@ include_directories(
 #  For Cmake is able to find files under include folder
 include_directories( ${PROJECT_SOURCE_DIR}/include )
 
-# add_library( CircleClustering ${PROJECT_NAME}/include/utilities/CircleCluster.hpp )
+#add_library( CircleClustering ${PROJECT_NAME}/include/utilities/CircleCluster.hpp )
 
 # start of modification
 ## Declare a C++ library
-# add_library(${PROJECT_NAME} src/patchworkpp.cpp )
-# target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
-# add_dependencies(${PROJECT_NAME} patchworkpp_generate_messages_cpp)
+add_library(${PROJECT_NAME} src/patchworkpp.cpp )
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+add_dependencies(${PROJECT_NAME} patchworkpp_generate_messages_cpp)
 # end of modification
 
 add_executable(offline_kitti src/offline_kitti.cpp)
@@ -91,13 +91,14 @@ add_executable(groundStemSeg src/groundStemSeg.cpp)
 target_link_libraries(groundStemSeg ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 add_dependencies(groundStemSeg patchworkpp_generate_messages_cpp)
 
-# added following 3 loc.
-add_executable(CloudSegmentaion src/CloudSegmentaion.cpp)
+#added following 3 loc.
+add_executable(CloudSegmentaion src/CloudSegmentaion.cpp )
+
 target_link_libraries(CloudSegmentaion ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
-add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp )
+add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp  )
 
 
-# testing tranfer gps to coordinates 
+#testing tranfer gps to coordinates 
 add_executable(GpsImuIntegral src/GpsImuIntegral.cpp)
 target_link_libraries(GpsImuIntegral ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 
@@ -117,6 +118,9 @@ target_link_libraries(ekf_2d_v2 ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 
 add_executable(ekf_2d_v3 src/ekf_v3.cpp)
 target_link_libraries(ekf_2d_v3 ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
+
+
+
 # add_executable(new_GPS_IMU_EKF src/new_GPS_IMU_EKF.cpp)
 # target_link_libraries(new_GPS_IMU_EKF ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 # ==== Install ====

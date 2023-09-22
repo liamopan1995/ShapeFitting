@@ -36,13 +36,13 @@ public:
     ///  State: x = [sx,sy,v_,sphi]
     ///  Control input: u = [angular velocity , linear acceleration]
     ///  Observation y = [sx,sy]
-    using MotionNoise = Eigen::Matrix<float, 2, 2>;  // 运动噪声类型
-    using UTMNoise = Eigen::Matrix<float, 2, 2>;  // observation 噪声类型
-    using Error_cov = Eigen::Matrix<float, 4, 4>;//error_covariance
-    using Mat4f = Eigen::Matrix<float, 4, 4>;  
-    using Mat2f = Eigen::Matrix<float, 2, 2>; 
-    using Observation = Eigen::Matrix<float,2,4>;
-    using Gain = Eigen::Matrix<float,4,2>;
+    using MotionNoise = Eigen::Matrix<float, 2, 2>; // control covariance 
+    using UTMNoise = Eigen::Matrix<float, 2, 2>;    // observation covariance 
+    using Error_cov = Eigen::Matrix<float, 4, 4>;   // error_covariance
+    using Mat4f = Eigen::Matrix<float, 4, 4>;       // state covariance 
+    using Mat2f = Eigen::Matrix<float, 2, 2>;       // F ( df/dx)
+    using Observation = Eigen::Matrix<float,2,4>;   // H
+    using Gain = Eigen::Matrix<float,4,2>;          // K
 
 
     /// Methods
@@ -54,7 +54,7 @@ public:
                    Sophus::SO3(Eigen::Matrix3d::Identity()), 
                    Eigen::Vector3d(v_ *cos(sphi_), v_ *sin(sphi_), 0), 
                    Eigen::Vector3d(sx_, sy_, 0));
-}
+    }
 
 
 private:
@@ -139,13 +139,12 @@ void EKF::Predict(const sensor_msgs::Imu::ConstPtr &msg_in) {
     sphi_ += dt * wphi;
     v_ += dt *a;
 
-    /// Update the error covariancce P_
+    /// Update the state covariancce P_
     Mat4f F = Mat4f::Identity() ;
     F(0,2) = - a*sin(sphi_)*dt;
     F(0,3) =     cos(sphi_)*dt;
     F(1,2) =   a*cos(sphi_)*dt;
     F(1,3) =     sin(sphi_)*dt;
-
     Q_.diagonal() <<  1e-2,  1e-3 ;
     Eigen::Matrix<float, 4, 2> G_k = Eigen::Matrix<float, 4, 2>::Zero();
     G_k.template block<2,2>(2,0) = Eigen::Matrix<float, 2, 2>::Identity() * dt;

@@ -19,6 +19,49 @@ const reals REAL_EPSILON=numeric_limits<reals>::epsilon();
 
 
 /*
+Struct definition
+*/
+struct Tree_info {
+    /// For the maintenance of fitted tree object:
+    /// Usage:
+    ///     vector<Single_scan> scans;
+    ///     Single_scan single_scan(time_stamp); // Initializing with time_stamp
+    ///     single_scan.tree_infos_.push_back(Stem.Get_tree_info());
+    ///     scans.push_back(single_scan)
+    ///   
+    reals x_;
+    reals y_;
+    reals r_;
+    ///  add other fileds when necessary , e.g: normal vector for 3d mathing,  but we first focus on 2d scan mathicng.
+    ///  don forget to modify the function: Get_tree_info as the field of Tree_info has been updated..
+    Tree_info() 
+        : x_(0.0), y_(0.0), r_(0.0) {} 
+    
+    Tree_info(reals x, reals y, reals r )
+        : x_(x), y_(y), r_(r) {} 
+};
+
+struct Single_scan {
+    /// For the maintenance of fitted tree object:
+    /// Usage:
+    ///     vector<Single_scan> scans;
+    ///     Single_scan single_scan(time_stamp); // Initializing with time_stamp
+    ///     single_scan.tree_infos_.push_back(Stem.Get_tree_info());
+    ///     scans.push_back(single_scan)
+    ///     
+    float time_stamp_ ;
+    std::vector<Tree_info> tree_infos_;
+    Single_scan() 
+        : time_stamp_(-1), tree_infos_() {}    
+    Single_scan(float time_stamp) 
+        : time_stamp_(time_stamp), tree_infos_() {}
+};
+
+
+
+
+
+/*
 Class definition
 */
 class Circle
@@ -85,6 +128,28 @@ public:
 	// helpers
     void get_averages(int MIN_NUM_CIRCLE=6);
     void get_standard_deviation(int MIN_NUM_CIRCLE=6);
+    
+    /// "  Get_tree_info() "
+    /// Helper that fetchs necessary data that represent a stem , construct them as vector and return
+    /// Usage:  
+    /// Defined as members  in Cloudsegmentation class:     
+    ///         vector<   vector< vector<float>>  > scans;
+    ///         vector<   vector<float>  > single_scan;
+    /// During class Cloudsegmentation's initialization : 
+    ///         scans.clear()
+    /// Everytime after a new scan arriaves : 
+    ///         single_scan.clear()
+    /// In processing , once a fitting of stem is valid: do:
+    ///         single_scan.push_back( Stem.Get_tree_info);
+    /// At the end  of this callback :
+    ///         scans.push_back (single_scan);
+    /// It is better to have another struct tree to hold these values, instead of using vector, easier for achieving data and data
+    /// management i.e. by single_scan[i].rx,  single_scan[i].ry, instead of by single_scan[i][0] etc..---> 
+    /// ---> Srtuct Tree_info
+
+    Tree_info Get_tree_info() const{ 
+        return Tree_info (Px_av, Py_av, r_av);
+    }
 
 	// routines
 	void print(void);
@@ -536,6 +601,7 @@ void Stem::get_standard_deviation(int MIN_NUM_CIRCLE) {
         s_sd = std::sqrt(s_sd / (num_circle-1));
     }
 }
+
 // Printing routine
 void Stem::print(void)
 {

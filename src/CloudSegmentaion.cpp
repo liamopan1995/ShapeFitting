@@ -44,12 +44,16 @@ typedef pcl::PointXYZI PointType;
 //  Set viewmode to 1, to view clusters of points, which are considered as prior circles
 //  Set viewmode to 2, to view clusters stems, each stem are made of fitted circles
 const int viewmode = 2;
+const int MIN_STEM_NUM =3;
 
 
 // write a class which iherits from the class Patchworkpp
 class cloudSegmentation
 {
 private:
+
+    Single_scan single_scan;
+    vector<Single_scan> scans;
     ros::NodeHandle nh;
     ros::NodeHandle pnh;
 
@@ -91,6 +95,40 @@ private:
     // std::vector<float> Zvalue; intentially used for storing z value.
 
 public:
+    void saveToFiles() const {
+        /// Saves tree infomations ( x, y ,r ) as one row to local
+        /// In each txt file , it contains several rows ,each represent a single tree (stem)
+        /// So later visulization tools can  be applied on these files to see 
+        /// how well the fitting was processed, and can provide straight ituition for scan matching  process
+        const char* homeDir = getenv("HOME");
+        if (!homeDir) {
+            std::cerr << "Error: HOME environment variable not set." << std::endl;
+            return;
+        }
+        
+        int scanIdx = 0;
+        for (const auto& scan : scans) {
+            // Construct the desired path with unique filename
+            std::string fullPath = std::string(homeDir) 
+                                + "/catkin_ws_aug/src/shapefitting/scans/"
+                                + "single_scan_" + std::to_string(scanIdx++) + ".txt";
+
+            std::ofstream fout(fullPath);
+            if (!fout) {
+                std::cerr << "Error: Unable to open file for writing: " << fullPath << std::endl;
+                continue; // move to the next file
+            }
+
+            for (const auto& tree_info : scan.tree_infos_) {
+                fout << scan.time_stamp_ << " " 
+                    << tree_info.x_ << " " 
+                    << tree_info.y_ << " " 
+                    << tree_info.r_ << std::endl;
+            }
+            // if (scanIdx >4) return;
+        }
+    }
+        
     cloudSegmentation() : nh(), pnh("~")
     {
 
@@ -412,18 +450,10 @@ public:
 
 
                 // Insert the points from single_circle_cloud into clustered_cloud for display
-
-                if(stem_candidate.num_circle > 6)
-                {
-                /*
-                Using derivation/variance of radii , and min_num of circles in cluester as threshold/criterien to valid stems, 
-                To Do: add radii criterion 
-                Could averagee/variance of mse also be benificial ?
-                */  stem_candidate.get_averages();
-                    stem_candidate.get_standard_deviation();
-                    stem_candidate.print();
+                if(stem_candidate.num_circle > 6){
                     clustered_cloud->insert(clustered_cloud->end(), cylinder_cloud->begin(), cylinder_cloud->end());            
                 }
+                
             }
             
             /*
@@ -432,6 +462,20 @@ public:
 
 
         }
+
+        if(stem_candidate.num_circle > 6)
+            {
+            /*
+            Using derivation/variance of radii , and min_num of circles in cluester as threshold/criterien to valid stems, 
+            To Do: add radii criterion 
+            Could averagee/variance of mse also be benificial ?
+            */  
+            stem_candidate.get_averages();
+            stem_candidate.get_standard_deviation();
+            stem_candidate.print();
+            single_scan.tree_infos_.push_back(stem_candidate.Get_tree_info());
+            }
+    
     }
 
 
@@ -446,6 +490,8 @@ public:
 
         // Clear the point cloud before clustering
         clustered_cloud->clear();
+        single_scan.tree_infos_.clear();
+        single_scan.time_stamp_ = cloudHeader.stamp.toSec();
         // cylinder_cloud->clear();
         pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
         // Now cluster pointcloud into seperate trunks first
@@ -493,7 +539,18 @@ public:
         clustered_cloud->height = 1;
         clustered_cloud->is_dense = true;
 
+        if(single_scan.tree_infos_.size() > MIN_STEM_NUM ){
+            std::cout<< "\n single_scan.tree_infos\n"<<single_scan.tree_infos_.size();
+            scans.push_back(single_scan);// optimizing with std::move is possible here
+            std::cout<< "\n scans 's size\n"<<scans.size()<<std::endl;
+            std::cout<< "\n last single scan 's size\n"<<scans.back().tree_infos_.size()<<std::endl;
+            // illegal visiting of back() will cause the funtion  to be out  of work
+        }
+
+
+
     }
+
     void projectTo3D()
     {
         // void projectTo3D(pcl::PointCloud<PointType>::Ptr& nonGroundCloud){
@@ -582,5 +639,7 @@ int main(int argc, char **argv)
     ROS_INFO("\033[1;32m---->\033[0m Cloud Segmentation Started.");
 
     ros::spin();
+
+    IP.saveToFiles();
     return 0;
 }
