@@ -1,3 +1,8 @@
+// Benchmark IMU ,  the error is due to Integral of IMU alwaying tends to accumulating error.
+// The Reult is thus much huge than  expected.
+
+///  Oct. 10th  --Modifing the data structure, so IMU and UTM data can be saved and latter store to local in 
+///  single one file (  this is done in other file)
 
 #include "sophus/so3.h"
 #include <ros/ros.h>
@@ -45,9 +50,12 @@ double firstTimeStamp = 0.;
 // Define a struct to store IMU data
 struct IMUData {
     double timestamp_;
+    
     Sophus::SO3 R_;
     Eigen::Vector3d v_;
     Eigen::Vector3d p_;
+    Eigen::Vector3d a_;
+    Eigen::Vector3d w_;
 };
 
 std::vector<IMUData> imu_data; // Store IMU data
@@ -155,7 +163,8 @@ void imuCallback(const sensor_msgs::Imu::ConstPtr &msg_in) {
         // imu_data_point.p_ = Tsolid2dash * Eigen::Vector3d (sx,sy,0);
         imu_data_point.v_ = Eigen::Vector3d (vx,vy,0);
         imu_data_point.p_ = Eigen::Vector3d (sx,sy,0);
-
+        imu_data_point.a_ = Eigen::Vector3d (a,0,0);
+        imu_data_point.w_ = Eigen::Vector3d (0,0,wphi);
         imu_data.push_back(imu_data_point);
     }
 }
@@ -209,6 +218,8 @@ int main(int argc, char **argv) {
         save_vec3(fout, imu_point.p_);
         save_quat(fout, imu_point.R_);
         save_vec3(fout, imu_point.v_);
+        save_vec3(fout, imu_point.a_);
+        save_vec3(fout, imu_point.w_);
         fout << std::endl;
     }
     std::cout<<"done"<<std::endl;

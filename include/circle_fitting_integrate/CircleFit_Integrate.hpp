@@ -49,11 +49,11 @@ struct Single_scan {
     ///     single_scan.tree_infos_.push_back(Stem.Get_tree_info());
     ///     scans.push_back(single_scan)
     ///     
-    float time_stamp_ ;
+    double time_stamp_ ;
     std::vector<Tree_info> tree_infos_;
     Single_scan() 
         : time_stamp_(-1), tree_infos_() {}    
-    Single_scan(float time_stamp) 
+    Single_scan(double time_stamp) 
         : time_stamp_(time_stamp), tree_infos_() {}
 };
 

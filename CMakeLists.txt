@@ -119,7 +119,14 @@ target_link_libraries(ekf_2d_v2 ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 add_executable(ekf_2d_v3 src/ekf_v3.cpp)
 target_link_libraries(ekf_2d_v3 ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 
+add_executable(ekf_v3_new_io src/ekf_v3_new_io.cpp)
+target_link_libraries(ekf_v3_new_io ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 
+add_executable(ekf_v3_new_iov2 src/ekf_v3_new_iov2.cpp)
+target_link_libraries(ekf_v3_new_iov2 ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
+
+add_executable(ekf_2d_v4 src/ekf_v4.cpp)
+target_link_libraries(ekf_2d_v4 ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )
 
 # add_executable(new_GPS_IMU_EKF src/new_GPS_IMU_EKF.cpp)
 # target_link_libraries(new_GPS_IMU_EKF ${Sophus_LIBRARIES} ${catkin_LIBRARIES} )

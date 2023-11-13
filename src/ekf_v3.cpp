@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sensor_msgs/NavSatFix.h>
 #include "utilities/toUTM.hpp"
+#include <cmath>
 using namespace Eigen;
 
 
@@ -31,19 +32,25 @@ struct IMUData {
 };
 
 class EKF {
-
-public:
-    ///  State: x = [sx,sy,v_,sphi]
+    ///  State: x = [sx,sy,sphi,v_]
     ///  Control input: u = [angular velocity , linear acceleration]
     ///  Observation y = [sx,sy]
-    using MotionNoise = Eigen::Matrix<float, 2, 2>; // control covariance 
-    using UTMNoise = Eigen::Matrix<float, 2, 2>;    // observation covariance 
-    using Error_cov = Eigen::Matrix<float, 4, 4>;   // error_covariance
+    using Process_cov = Eigen::Matrix<float, 2, 2>; // control covariance 
+    using Observation_cov = Eigen::Matrix<float, 3, 3>;    // observation covariance 
+    using State_cov = Eigen::Matrix<float, 4, 4>;   // error_covariance
     using Mat4f = Eigen::Matrix<float, 4, 4>;       // state covariance 
+    using Mat3f = Eigen::Matrix<float, 3, 3>; 
     using Mat2f = Eigen::Matrix<float, 2, 2>;       // F ( df/dx)
-    using Observation = Eigen::Matrix<float,2,4>;   // H
-    using Gain = Eigen::Matrix<float,4,2>;          // K
+    using Measurement = Eigen::Matrix<float,3,4>;   // H
+    using Kalman_Gain = Eigen::Matrix<float,4,3>;          // K
 
+public:
+
+    std::vector< Eigen::Matrix<double, 1,5>> UTM;
+    std::vector<Eigen::Vector3d> control_input;
+    Process_cov Q_ = Process_cov::Zero();// Process Covariance
+    Observation_cov R_ = Observation_cov::Zero();// Measurement Covariance
+    State_cov P_ = State_cov::Identity() * 1e-3;// State Covariance
 
     /// Methods
     void Predict(const sensor_msgs::Imu::ConstPtr &msg_in);
@@ -58,15 +65,17 @@ public:
 
 
 private:
-    MotionNoise Q_ = MotionNoise::Zero();
-    UTMNoise V_ = UTMNoise::Zero();
-    Error_cov P_ = Error_cov::Identity() * 1e-2;
+
+    double initial_time_ = 0.0;
     double current_time_ = 0.0;  
+    double dt_ =0.0;
+    double last_utm_time_ = 0.0;
+    double utm_time_diff_ = 0.0;
     /// Flags
     bool first_imu = true;
     bool first_utm = true;
-    bool initilized_imu = false; //  
-    Eigen::Vector2f utm_origin = Eigen::Vector2f::Zero();
+    bool initilized_imu = false; 
+    
     /// States:
     float sx_ =0;
     float sy_ =0;
@@ -74,9 +83,13 @@ private:
     float sphi_ =0;
 
     /// IMU initilization
-    float accumu_acce =0.0, accumu_angu =0.0;
-    float bias_acc = 0.0,  bias_ang = 0.0;
+    float accumu_acce =0.0, accumu_angu =0.0;// what?
+    float bias_acc = 0.0,  bias_ang = 0.0; // bias of IMU measurements
     int  record_time = 0;
+
+    /// UTM 
+    Eigen::Vector2f utm_origin = Eigen::Vector2f::Zero();
+    Eigen::Vector2f utm_last = Eigen::Vector2f::Zero();
 };
 
 void EKF::Predict(const sensor_msgs::Imu::ConstPtr &msg_in) {
@@ -92,6 +105,7 @@ void EKF::Predict(const sensor_msgs::Imu::ConstPtr &msg_in) {
         /// Init the time stamp
         if(first_imu == true) {
         current_time_ = msg_in->header.stamp.toSec();
+        initial_time_ = msg_in->header.stamp.toSec();
         first_imu = false;
         return;
         }
@@ -109,11 +123,11 @@ void EKF::Predict(const sensor_msgs::Imu::ConstPtr &msg_in) {
     /// Check data validity
     if(msg_in->header.stamp.toSec() < current_time_) return;
 
-    /// Get dt and update current_time_
-    double dt = msg_in->header.stamp.toSec() - current_time_;
+    /// Get dt_ and update current_time_
+    dt_ = msg_in->header.stamp.toSec() - current_time_;
     current_time_ = msg_in->header.stamp.toSec();
-    /// Check dt's validity , not predict when dt is larger than 0.1s
-    if(dt >0.1) return;
+    /// Check dt_'s validity , not predict when dt_ is larger than 0.1s
+    if(dt_ >0.1) return;
     Eigen::Vector3d angular_velocity(msg_in->angular_velocity.x,
                                      msg_in->angular_velocity.y,
                                      msg_in->angular_velocity.z - bias_ang);
@@ -121,7 +135,7 @@ void EKF::Predict(const sensor_msgs::Imu::ConstPtr &msg_in) {
     Eigen::Vector3d linear_acceleration(msg_in->linear_acceleration.x - bias_acc,
                                        msg_in->linear_acceleration.y,
                                        msg_in->linear_acceleration.z );
-    /// When the orientation of IMU has to be condisred:
+
 
     // Sophus::SO3 rot = Sophus::SO3 (Eigen::Quaterniond(msg_in->orientation.w,msg_in->orientation.x,msg_in->orientation.y,msg_in->orientation.z));
     // Eigen::Vector3d angular_velocity_world = rot*angular_velocity;
@@ -132,23 +146,25 @@ void EKF::Predict(const sensor_msgs::Imu::ConstPtr &msg_in) {
     /// Ohterwise :
     float wphi = angular_velocity[2];
     float a = linear_acceleration[0]; 
-
+    control_input.push_back(Eigen::Vector3d(msg_in->header.stamp.toSec()-initial_time_,a,wphi));
     /// Update the states
-    sx_ += dt* v_*cos(sphi_);
-    sy_ += dt* v_*sin(sphi_);
-    sphi_ += dt * wphi;
-    v_ += dt *a;
+    sx_ += dt_* v_*cos(sphi_);
+    sy_ += dt_* v_*sin(sphi_);
+    // sx_ += dt_* v_*cos(sphi_);// oct. 6th
+    // sy_ += dt_* v_*sin(sphi_);
+    sphi_ += dt_ * wphi;
+    v_ += dt_ *a;
 
     /// Update the state covariancce P_
     Mat4f F = Mat4f::Identity() ;
-    F(0,2) = - a*sin(sphi_)*dt;
-    F(0,3) =     cos(sphi_)*dt;
-    F(1,2) =   a*cos(sphi_)*dt;
-    F(1,3) =     sin(sphi_)*dt;
-    Q_.diagonal() <<  1e-2,  1e-3 ;
+    F(0,2) = - a*sin(sphi_)*dt_;
+    F(0,3) =     cos(sphi_)*dt_;
+    F(1,2) =   a*cos(sphi_)*dt_;
+    F(1,3) =     sin(sphi_)*dt_;
+    //Q_.diagonal() <<  1e-2,  1e-3 ;
     Eigen::Matrix<float, 4, 2> G_k = Eigen::Matrix<float, 4, 2>::Zero();
-    G_k.template block<2,2>(2,0) = Eigen::Matrix<float, 2, 2>::Identity() * dt;
-    Error_cov Q_k = G_k * Q_ * G_k.transpose();
+    G_k.template block<2,2>(2,0) = Eigen::Matrix<float, 2, 2>::Identity() * dt_;
+    State_cov Q_k = G_k * Q_ * G_k.transpose();
     P_ = F * P_ * F.transpose() + Q_k;
 }
 
@@ -160,7 +176,7 @@ void EKF::Update(const sensor_msgs::NavSatFix::ConstPtr& msg_in){
         return;
         }
     
-    if( initilized_imu ) current_time_=msg_in->header.stamp.toSec();
+    if( initilized_imu ) current_time_ = msg_in->header.stamp.toSec();
     /// Process the GPS data as required
     double  latitude = msg_in->latitude;
     double  longitude = msg_in->longitude;
@@ -173,31 +189,50 @@ void EKF::Update(const sensor_msgs::NavSatFix::ConstPtr& msg_in){
     if(first_utm == true){
         utm_origin[0] = UTMEasting;
         utm_origin[1] = UTMNorthing;
+        utm_last[0] = UTMEasting;
+        utm_last[1] = UTMNorthing;
+        last_utm_time_ =  msg_in->header.stamp.toSec();
         first_utm = false; 
         return;
     }
-    Eigen::Vector2f observation =  Eigen::Vector2f(UTMEasting, UTMNorthing) -utm_origin;
+    ///  I think here lacks a condition to check if the newst utm_time stamp is near to the time stamp
+    ///  of the lastest IMU message
+    utm_time_diff_ = msg_in->header.stamp.toSec() - last_utm_time_;
+    last_utm_time_ = msg_in->header.stamp.toSec();
 
-    std::cout<<"UTM\n"<<std::endl;
-    std::cout<<observation[0]<<std::endl;
-    std::cout<<observation[1]<<std::endl;
+    Eigen::Vector2f observation_2d =  Eigen::Vector2f(UTMEasting, UTMNorthing) -utm_origin;
+    float measurement_v = (observation_2d - utm_last).norm() / utm_time_diff_;
+    float measurement_theta = atan2(observation_2d[0]-utm_last[0], observation_2d[1]-utm_last[1]);
 
+    utm_last = observation_2d;
+    Eigen::Vector3f observation_3d = Eigen::Vector3f(observation_2d[0],observation_2d[1],measurement_v);
+
+    
+    Eigen::Matrix<double, 1,5> UTM_row;
+    UTM_row << msg_in->header.stamp.toSec()-initial_time_,observation_3d[0],observation_3d[1],observation_3d[2], measurement_theta;
+    UTM.push_back(UTM_row);
+    std::cout<<"UTM\n"<<observation_3d[0]<<"\t"<<observation_3d[1]<<"\t"<<observation_3d[2]<<std::endl;
     
     if(!initilized_imu) return;
     /// Update( Correct) the prediction and Update the error covariance matrix P_
-    Observation H = Observation::Zero();
+    Measurement H = Measurement::Zero();
     H.template block<2,2>(0,0) = Mat2f::Identity();
-    V_.diagonal()<< 0.3, 0.3;
-    //V_.diagonal()<< 0, 0;
-    Gain K = P_ * H.transpose() * (H * P_ * H.transpose() + V_ ).inverse();
+    H(2,3) = 1;
+
+    //R_.diagonal()<< 0.3, 0.3 ,0.5;
+
+    Kalman_Gain K = P_ * H.transpose() * (H * P_ * H.transpose() + R_ ).inverse();
 
     MatrixXf estimate(4,1);
-    estimate << sx_ , sy_ , sphi_, v_;
-    std::cout<< "before update v_"<< v_<<std::endl;
-    std::cout<< "before update sx_ , sy_"<< sx_<<", "<<sy_<<std::endl;
-    Eigen::Vector2f innovation = observation - estimate.template block<2,1>(0,0);
-    std::cout<< "innovation\n"<< innovation<<", "<<std::endl;
-    std::cout<< "kalman Gain\n"<< K<<", "<<std::endl;
+    estimate << sx_ , sy_ ,sphi_,v_;
+    std::cout<< "before update v_"<< v_<< "\nbefore update sx_ , sy_"<< sx_<<", "<<sy_<<std::endl;
+
+    // Measurement function : H = [ [1,0,0,0] , [0,1,0,0] ]
+    // Revision : derive a velo observation from utm's travel in last time step ie.:
+    // (UTM current - UTM last) / dt_
+
+    Eigen::Vector3f innovation = observation_3d - Eigen::Vector3f (estimate(0,0),estimate(1,0),estimate(3,0));
+    //std::cout<< "innovation\n"<< innovation<<", \nkalman Gain\n"<< K<<", "<<std::endl;
     estimate += K*innovation;
 
     sx_  = estimate(0,0);
@@ -205,16 +240,17 @@ void EKF::Update(const sensor_msgs::NavSatFix::ConstPtr& msg_in){
     sphi_  = estimate(2,0);
     v_  = estimate(3,0);
     P_ = ( Mat4f::Identity()- K * H) * P_;
-    std::cout<< "after update v_ "<< v_<<std::endl;
-    std::cout<< "after update sx_ , sy_ "<< sx_<<", "<<sy_<<std::endl;
+    std::cout<< "after update v_ "<< v_<< "\nafter update sx_ , sy_ "<< sx_<<", "<<sy_<<std::endl;
 }
+
+
+
+
+
 
 std::vector<IMUData> imu_data; // Store IMU data
 EKF  ekf;
 ros::Publisher path_pub; // Publisher for the path
-
-
-
 
 void imuCallback(const sensor_msgs::Imu::ConstPtr &msg_in) {
 
@@ -228,6 +264,17 @@ void GPSCallback(const sensor_msgs::NavSatFix::ConstPtr& msg_in) {
 }
 
 int main(int argc, char **argv) {
+    using Process_cov = Eigen::Matrix<float, 2, 2>; // control covariance 
+    using Observation_cov = Eigen::Matrix<float, 3, 3>;    // observation covariance 
+    using State_cov = Eigen::Matrix<float, 4, 4>;   // error_covariance
+
+    Eigen::Vector2f process_covariance(0.01, 0.02); // Vector with diagonal values
+    Eigen::Vector3f observation_covariance(3, 3, 0); // Vector with diagonal values
+    ekf.Q_ = process_covariance.asDiagonal();
+    // ekf.R_ = Observation_cov::Zero();
+    ekf.R_ = observation_covariance.asDiagonal();
+    ekf.P_ = State_cov::Identity() * 1e-3;
+
     ros::init(argc, argv, "imu_integal");
     ros::NodeHandle nh;
     
@@ -276,6 +323,33 @@ int main(int argc, char **argv) {
         save_vec3(fout, imu_point.v_);
         fout << std::endl;
     }
+
+    // Save UTM to /slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/utm.txt
+    std::ofstream utm_file( std::string(homeDir) +"/slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/utm_measurement.txt");
+    if (utm_file.is_open()) {
+        for (const auto &row : ekf.UTM) {
+            for (int i = 0; i < row.size(); i++) {
+                utm_file << row(i);
+                if (i < row.size() - 1) utm_file << " "; // Separate the columns by spaces
+            }
+            utm_file << "\n";
+        }
+        utm_file.close();
+    } else {
+        std::cerr << "Error: Unable to open UTM file for writing." << std::endl;
+    }
+
+    // Save control_input to /slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/control_inputs.txt
+    std::ofstream control_input_file( std::string(homeDir) +"/slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/control_inputs.txt");
+    if (control_input_file.is_open()) {
+        for (const auto &vector : ekf.control_input) {
+            control_input_file << vector(0) << " " << vector(1) << " " << vector(2) << "\n";
+        }
+        control_input_file.close();
+    } else {
+        std::cerr << "Error: Unable to open control_input file for writing." << std::endl;
+    }
+
     std::cout<<"done"<<std::endl;
 
     return 0;

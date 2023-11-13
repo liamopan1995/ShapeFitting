@@ -109,8 +109,7 @@ public:
         int scanIdx = 0;
         for (const auto& scan : scans) {
             // Construct the desired path with unique filename
-            std::string fullPath = std::string(homeDir) 
-                                + "/catkin_ws_aug/src/shapefitting/scans/"
+            std::string fullPath = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/scans/"
                                 + "single_scan_" + std::to_string(scanIdx++) + ".txt";
 
             std::ofstream fout(fullPath);
@@ -118,14 +117,17 @@ public:
                 std::cerr << "Error: Unable to open file for writing: " << fullPath << std::endl;
                 continue; // move to the next file
             }
-
+            //  modified at oct.
+            int stemIdx = 0;
             for (const auto& tree_info : scan.tree_infos_) {
-                fout << scan.time_stamp_ << " " 
+                fout<< std::setprecision(18)<< scan.time_stamp_ << " " 
+                    << std::setprecision(9)
                     << tree_info.x_ << " " 
                     << tree_info.y_ << " " 
-                    << tree_info.r_ << std::endl;
+                    << tree_info.r_ << " " 
+                    << stemIdx++          << std::endl;
             }
-            // if (scanIdx >4) return;
+
         }
     }
         
@@ -474,6 +476,12 @@ public:
             stem_candidate.get_standard_deviation();
             stem_candidate.print();
             single_scan.tree_infos_.push_back(stem_candidate.Get_tree_info());
+            // single_scan.tree_infos_ stores the info of stems in the current scan. 
+
+
+            ///  create a vector which holds the info of stems inside a gloabl map,
+            ///  implement two functions  that create pointcloud type to vector and vise versa
+            ///   
             }
     
     }
@@ -546,10 +554,9 @@ public:
             std::cout<< "\n last single scan 's size\n"<<scans.back().tree_infos_.size()<<std::endl;
             // illegal visiting of back() will cause the funtion  to be out  of work
         }
-
-
-
     }
+
+
 
     void projectTo3D()
     {
