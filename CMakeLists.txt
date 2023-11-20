@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.0.2)
+project(patchworkpp)
+
 option(BUILD_JSK_PKGS "Enable building of required components of jsk_recognition_msgs and jsk_rviz_plugins" ON)
 
 if(BUILD_JSK_PKGS)
@@ -5,10 +8,9 @@ if(BUILD_JSK_PKGS)
 #     add_subdirectory(include/jsk_rviz_plugins) #TODO: allow building of rviz plugins as well
 endif()
 
-cmake_minimum_required(VERSION 3.0.2)
-project(patchworkpp)
 
-add_compile_options(-std=c++17)
+
+# add_compile_options(-std=c++17)
 #set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 14) # was initially 14
@@ -55,6 +57,25 @@ catkin_package(
         CATKIN_DEPENDS roscpp rospy std_msgs
 )
 
+# Find Sophus
+find_package(Sophus REQUIRED) 
+include_directories(${Sophus_INCLUDE_DIRS})
+
+# Find Eigen3
+find_package(Eigen3 REQUIRED)
+# Include Eigen3 directories
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+# g2o dependency for solver : CHOLMOD
+# Include CHOLMOD directories
+include_directories(/usr/include/suitesparse)
+# Find Armadillo
+find_package(Armadillo REQUIRED)
+include_directories(${ARMADILLO_INCLUDE_DIRS})
+# Find mlpack
+include_directories(/usr/include/mlpack)
+link_directories(/usr/lib/x86_64-linux-gnu) 
+
 include_directories(
         ${catkin_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
@@ -92,9 +113,12 @@ target_link_libraries(groundStemSeg ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenC
 add_dependencies(groundStemSeg patchworkpp_generate_messages_cpp)
 
 #added following 3 loc.
-add_executable(CloudSegmentaion src/CloudSegmentaion.cpp )
+add_executable( CloudSegmentaion 
+src/CloudSegmentaion.cpp include/icp/bfnn.cc include/icp/icp2d.cc include/pose_graph/PoseGraphBuilder.cpp)
 
-target_link_libraries(CloudSegmentaion ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(CloudSegmentaion 
+${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${Sophus_LIBRARIES} ${ARMADILLO_LIBRARIES} 
+Eigen3::Eigen mlpack g2o_core g2o_stuff g2o_types_slam2d cholmod)
 add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp  )
 
 

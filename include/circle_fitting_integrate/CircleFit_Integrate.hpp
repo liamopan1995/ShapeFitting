@@ -57,7 +57,23 @@ struct Single_scan {
         : time_stamp_(time_stamp), tree_infos_() {}
 };
 
+/***************************** 20 Nov *********************************/
+std::vector<Eigen::Vector3d> readXYFromSingleScan(const Single_scan& single_scan) {
+    std::vector<Eigen::Vector3d> fileData;
+    for (const auto& tree_info : single_scan.tree_infos_) {
+        fileData.emplace_back(tree_info.x_, tree_info.y_, 0.0); // Z is set to 0 as it's not used
+    }
+    return fileData;
+}
 
+std::vector<Eigen::Vector3d> readXYRFromSingleScan(const Single_scan& single_scan) {
+    std::vector<Eigen::Vector3d> fileDataRadius;
+    for (const auto& tree_info : single_scan.tree_infos_) {
+        fileDataRadius.emplace_back(tree_info.x_, tree_info.y_, tree_info.r_); // Using Z component for radius
+    }
+    return fileDataRadius;
+}
+/****************************** End 20 Nov   ********************************/
 
 
 

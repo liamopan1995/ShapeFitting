@@ -13,7 +13,10 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include "patchworkpp/patchworkpp.hpp"
 #include "circle_fitting_integrate/CircleFit_Integrate.hpp"
+#include "common/utilities.h"
 
+#include "icp/icp2d.h"
+#include "pose_graph/PoseGraphBuilder.hpp"
 // #include "utilities/CircleClsuter.hpp"
 
 // TODO : 0. Organize the file into hpp, cpp. the current file is too messy,  and add comments to each function about its usage
@@ -43,9 +46,10 @@ typedef pcl::PointXYZI PointType;
 
 //  Set viewmode to 1, to view clusters of points, which are considered as prior circles
 //  Set viewmode to 2, to view clusters stems, each stem are made of fitted circles
-const int viewmode = 2;
+const int viewmode = 0;
 const int MIN_STEM_NUM =3;
 
+int pose_i = 1;
 
 // write a class which iherits from the class Patchworkpp
 class cloudSegmentation
@@ -54,8 +58,13 @@ private:
 
     Single_scan single_scan;
     vector<Single_scan> scans; //  corresponds to single_scan.txt
+    PoseGraphBuilder poseGraphBuilder;
 /************************************** 20 Nov ************************************************/
-    
+    Icp2d icp_2d;
+    std::vector<MovementData> odometry;
+    std::vector<MovementData> translation_pose2pose;
+    std::vector<Vec6d> global_map;
+    std::vector<Vec6d> local_map;
 
 
 /************************************** End 20 No v************************************************/
@@ -101,6 +110,11 @@ private:
     // std::vector<float> Zvalue; intentially used for storing z value.
 
 public:
+    /************** 20 Nov ************/
+    Vec3d path_accumulated =Vec3d::Zero();
+    Mat3d Rotation_accumulated = Mat3d::Identity();
+    /************** End 20 Nov************/
+
     void saveToFiles() const {
         /// Saves tree infomations ( x, y ,r ) as one row to local
         /// In each txt file , it contains several rows ,each represent a single tree (stem)
@@ -111,7 +125,6 @@ public:
             std::cerr << "Error: HOME environment variable not set." << std::endl;
             return;
         }
-        
         int scanIdx = 0;
         for (const auto& scan : scans) {
             // Construct the desired path with unique filename
@@ -469,6 +482,14 @@ public:
             */
 
 
+           if(viewmode==0){
+            // No visulizer
+                if (circle.s <= Circle::MSE_MAX && circle.r <0.4) {
+                    stem_candidate.pushCircle(std::move(circle));
+                }
+            }
+
+
         }
 
         if(stem_candidate.num_circle > 6)
@@ -480,7 +501,7 @@ public:
             */  
             stem_candidate.get_averages();
             stem_candidate.get_standard_deviation();
-            stem_candidate.print();
+            //stem_candidate.print(); // print stem infos
             single_scan.tree_infos_.push_back(stem_candidate.Get_tree_info());
             // single_scan.tree_infos_ stores the info of stems in the current scan. 
 
@@ -528,7 +549,6 @@ public:
             for (const int index : cluster.indices)
             {
                 // Create a new point without color
-                
                 point.normal_x = nonGroundCloud->points[index].x;
                 point.normal_y = nonGroundCloud->points[index].y;
                 // point.h = 0;
@@ -536,7 +556,6 @@ public:
                 point.x = 0;
                 point.y = 0;
                 point.z = nonGroundCloud->points[index].intensity;
-
                 clustered_cloud_stem->points.push_back(point);
             }
 
@@ -545,8 +564,6 @@ public:
 
             circleClustering();  // Returns  cluster_indices
             //  Here we further store the stems into our structe  : frame or scan
-            
-
         }
 
         clustered_cloud->width = clustered_cloud->size();
@@ -554,24 +571,106 @@ public:
         clustered_cloud->is_dense = true;
 
         if(single_scan.tree_infos_.size() > MIN_STEM_NUM ){
-            std::cout<< "\n single_scan.tree_infos\n"<<single_scan.tree_infos_.size();
+            //std::cout<< "\n single_scan.tree_infos\n"<<single_scan.tree_infos_.size();
             scans.push_back(single_scan);// optimizing with std::move is possible here
             
             std::cout<< "\n scans 's size\n"<<scans.size()<<std::endl;
-            std::cout<< "\n last single scan 's size\n"<<scans.back().tree_infos_.size()<<std::endl;
+            //std::cout<< "\n last single scan 's size\n"<<scans.back().tree_infos_.size()<<std::endl;
             // illegal visiting of back() will cause the funtion  to be out  of work
-        }
+
+            /*********************** 20 Nov **************************/
+
+            double timestamp = single_scan.time_stamp_;
+            std::vector<Eigen::Vector3d> scan_data = readXYFromSingleScan(single_scan);
+            std::vector<Eigen::Vector3d> scan_data_with_radius = readXYRFromSingleScan(single_scan);
+
+            if(!icp_2d.isSourceSet()) {
+                icp_2d.SetSource(scan_data);
+                return;
+            }
+            icp_2d.SetTarget(scan_data);
+            // if pose estimation failed:
+            if (!icp_2d.pose_estimation_3d3d()) {
+                return;
+            }
+            Mat3d R = icp_2d.Get_Odometry().R_;
+            Vec3d t = icp_2d.Get_Odometry().p_;
+            if(!t.hasNaN()&& !R.hasNaN()) {
+                // because the swaped use of target and source in the code : bfnn
+                // the t and R is the transformation for aligning the older scan to the newst scan.
+                path_accumulated -= t;
+                Rotation_accumulated = R.inverse() *  Rotation_accumulated;
+                // Save the translation between consective poses
+                translation_pose2pose.push_back(MovementData(timestamp, R, 
+                Vec3d::Zero(), t));
+                // Save the translation from the current pose to the origin
+                odometry.push_back(MovementData(timestamp, Rotation_accumulated, 
+                Vec3d::Zero(), path_accumulated));
+                
+                // Maintain the global-, local- stem map:
+                int idx = 0;
+                for(Eigen::Vector3d  point: scan_data_with_radius) {
+                    Eigen::Vector3d frame_in_global = Rotation_accumulated * point + path_accumulated;
+
+                    Vec6d frame_in_global_time_idx_clusteridx;
+                    frame_in_global_time_idx_clusteridx<<frame_in_global(0),
+                    frame_in_global(1),
+                    frame_in_global(2),
+                    timestamp,
+                    idx,
+                    0.;
+                    global_map.push_back(frame_in_global_time_idx_clusteridx);
+
+                    // Updated at 17 Nov
+                    Vec6d frame_in_local_time_idx_clusteridx;
+                    frame_in_local_time_idx_clusteridx<<point(0),
+                    point(1),
+                    point(2),
+                    timestamp,
+                    idx,
+                    0.;
+                    local_map.push_back(frame_in_local_time_idx_clusteridx);
+
+                    idx++;
+                }
+                icp_2d.SetSource(scan_data);//oct 18
+            }
+        }       
+    }
+
+
+            /************************* End 20 Nov ************************/
+        
 
         // After a sincle_scan is generated: ( which has to have the infos like a single_scan.txt does):
 
         // 1. render( reconstruct the data structe to fit with the _____.cpp)
         // 2. run scan to scan ICP 
         // 3. maitain a global stem map, local stem map, odometry and pose2posetranslation data structures.
-        // 4. if condition to run graph optimization is met, construct the pose graph and solve  
+        // 4. if condition to run graph optimization is met, construct the pose graph and solve
+
+    /*************************  20 Nov ************************/
+    void runPoseGraphOptimization(){
+        std::cout << "runPoseGraphOptimization has been called"<<endl;
+        if(pose_i % 50==0 || pose_i==407){
+        // Run in every 10 scan
+            const char* homeDir = getenv("HOME");
+            std::string fullPath = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/g2o_result/"
+                                + "single_scan_" + std::to_string(pose_i) + ".g2o";
+            std::cout<< "In iter: "<<pose_i<<endl;
+            //Reusing it by  just reseting all vertices and edges at here 
+            poseGraphBuilder.clear_edges_vertices();  
+            poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose);
+            if(pose_i % 50==0 || pose_i==407){
+            // Run in every 50 scan
+                poseGraphBuilder.saveGraph(fullPath);
+                std::cout << "Pose graph optimization completed." << std::endl;
+            }
+            
+        }
+        ++pose_i;
     }
-
-
-
+    /*************************  End 20 Nov ************************/
     void projectTo3D()
     {
         // void projectTo3D(pcl::PointCloud<PointType>::Ptr& nonGroundCloud){
@@ -581,7 +680,6 @@ public:
         }
     }
 
-
     void stemSeg()
     {
         removeByIntensity(nonGroundCloud);
@@ -590,6 +688,7 @@ public:
         radiusOutlierRemoval();
         //euclideanClustering(); // do stems grouping
         stemClustering();
+        runPoseGraphOptimization();
         projectTo3D();
     }
 
