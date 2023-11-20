@@ -324,7 +324,7 @@ int main(int argc, char **argv) {
         fout << std::endl;
     }
 
-    // Save UTM to /slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/utm.txt
+    // Save UTM to /slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/
     std::ofstream utm_file( std::string(homeDir) +"/slam_in_autonomous_driving/data/ch3/velodyne_bag_txt/utm_measurement.txt");
     if (utm_file.is_open()) {
         for (const auto &row : ekf.UTM) {

@@ -32,8 +32,11 @@ private:
                              std::vector<Vec6d> localMap, 
                              const std::vector<MovementData>& odometry,
                              const std::vector<MovementData>& translationPose2Pose);
-    Mat3d information_edge_se2_ = Mat3d::Identity();
-    Mat2d information_edge_xy_ = Mat2d::Identity();
+    // infomation matrice
+    Mat3d information_edge_se2_;
+    Mat2d information_edge_xy_;
+
+
     // Additional private members and methods...
     // Todo  iterate over vertices and publish them in ros message types.
 };

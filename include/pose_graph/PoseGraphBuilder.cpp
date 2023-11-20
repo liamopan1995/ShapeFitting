@@ -13,6 +13,13 @@
 
 PoseGraphBuilder::PoseGraphBuilder() {
     initializeOptimizer();
+    information_edge_se2_ = Mat3d::Identity();
+    information_edge_xy_ = Mat2d::Identity();
+    // information_edge_se2_ << 100.0, 0.0, 0.0,
+    //                              0.0, 100.0, 0.0,
+    //                              0.0, 0.0, 1000.0;
+    // information_edge_xy_ << 100.0, 0.0,
+    //                             0.0, 100.0;
 }
 void PoseGraphBuilder::clear_edges_vertices(){
     optimizer_.clear();
@@ -62,7 +69,11 @@ void PoseGraphBuilder::clusterData(const std::vector<Vec6d>& globalMap) {
         data.insert_cols(data.n_cols, arma::vec({point(0,0), point(1,0), point(2,0)}));
     }
 
-    mlpack::dbscan::DBSCAN<> dbscan(0.5, 5); // Example values for eps and min_samples
+    mlpack::dbscan::DBSCAN<> dbscan(0.5, 5); // Example values for eps and min_samples Nov ori: (0.5 5)
+    // (0.5 5)
+    // (0.5 3)
+    // (0.7, 5) good
+    // try 3
     arma::Row<size_t> assignments;
     dbscan.Cluster(data, assignments);
 

@@ -492,7 +492,7 @@ public:
 
         }
 
-        if(stem_candidate.num_circle > 6)
+        if(stem_candidate.num_circle > 6)//6
             {
             /*
             Using derivation/variance of radii , and min_num of circles in cluester as threshold/criterien to valid stems, 
@@ -652,7 +652,7 @@ public:
     /*************************  20 Nov ************************/
     void runPoseGraphOptimization(){
         std::cout << "runPoseGraphOptimization has been called"<<endl;
-        if(pose_i % 50==0 || pose_i==407){
+        if(pose_i % 3==0 || pose_i==407){
         // Run in every 10 scan
             const char* homeDir = getenv("HOME");
             std::string fullPath = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/g2o_result/"
@@ -661,7 +661,7 @@ public:
             //Reusing it by  just reseting all vertices and edges at here 
             poseGraphBuilder.clear_edges_vertices();  
             poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose);
-            if(pose_i % 50==0 || pose_i==407){
+            if(pose_i % 3==0 || pose_i==407){
             // Run in every 50 scan
                 poseGraphBuilder.saveGraph(fullPath);
                 std::cout << "Pose graph optimization completed." << std::endl;
