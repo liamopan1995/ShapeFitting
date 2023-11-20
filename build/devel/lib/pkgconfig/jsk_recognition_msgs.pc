@@ -1,0 +1,8 @@
+prefix=/home/liam/catkin_ws_aug/src/shapefitting/build/devel
+
+Name: jsk_recognition_msgs
+Description: Description of jsk_recognition_msgs
+Version: 1.2.15
+Cflags: -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include
+Libs: -L${prefix}/lib 
+Requires: std_msgs sensor_msgs geometry_msgs

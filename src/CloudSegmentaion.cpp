@@ -165,7 +165,6 @@ public:
         nanPoint.y = std::numeric_limits<float>::quiet_NaN();
         nanPoint.z = std::numeric_limits<float>::quiet_NaN();
         nanPoint.intensity = -1;
-
         allocateMemory();
     }
 
@@ -689,7 +688,7 @@ public:
         //euclideanClustering(); // do stems grouping
         stemClustering();
         runPoseGraphOptimization();
-        projectTo3D();
+        //projectTo3D();
     }
 
     void publishCloud()
@@ -726,7 +725,7 @@ public:
 
     void cloudHandler(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
     {
-
+        // process the message only after 3 messages have been received
         copyPointCloud(laserCloudMsg);
 
         // Trying with intensity filter and tuninng it started from 9 :
@@ -746,6 +745,8 @@ public:
         //printLineToROSTerminal();
         stemSeg();
         publishCloud();
+
+        
     }
 };
 

@@ -1,0 +1,8 @@
+prefix=/home/liam/catkin_ws_aug/src/shapefitting/build/devel
+
+Name: patchworkpp
+Description: Description of patchworkpp
+Version: 0.0.0
+Cflags: -I/home/liam/catkin_ws_aug/src/shapefitting/include
+Libs: -L${prefix}/lib 
+Requires: roscpp rospy std_msgs

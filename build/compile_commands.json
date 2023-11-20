@@ -1,0 +1,112 @@
+[
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/ekf_2d_v3.dir/src/ekf_v3.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v3.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v3.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/ekf_v3_new_iov2.dir/src/ekf_v3_new_iov2.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v3_new_iov2.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v3_new_iov2.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/ekf_2d.dir/src/ekf.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/ekf.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/ekf.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/ImuIntegral_2d.dir/src/imu_2d.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/imu_2d.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/imu_2d.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/ImuIntegral.dir/src/imuIntegal.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/imuIntegal.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/imuIntegal.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/GpsImuIntegral.dir/src/GpsImuIntegral.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/GpsImuIntegral.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/GpsImuIntegral.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g   -std=c++14 -o CMakeFiles/groundStemSeg.dir/src/groundStemSeg.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/groundStemSeg.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/groundStemSeg.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g   -std=c++14 -o CMakeFiles/demo.dir/src/demo.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/demo.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/demo.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dpatchworkpp_EXPORTS -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g -fPIC   -std=c++14 -o CMakeFiles/patchworkpp.dir/src/patchworkpp.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/patchworkpp.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/patchworkpp.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/ekf_v3_new_io.dir/src/ekf_v3_new_io.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v3_new_io.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v3_new_io.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g   -std=c++14 -o CMakeFiles/CloudSegmentaion.dir/src/CloudSegmentaion.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/CloudSegmentaion.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/CloudSegmentaion.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g   -std=c++14 -o CMakeFiles/CloudSegmentaion.dir/include/icp/bfnn.cc.o -c /home/liam/catkin_ws_aug/src/shapefitting/include/icp/bfnn.cc",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/include/icp/bfnn.cc"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g   -std=c++14 -o CMakeFiles/CloudSegmentaion.dir/include/icp/icp2d.cc.o -c /home/liam/catkin_ws_aug/src/shapefitting/include/icp/icp2d.cc",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/include/icp/icp2d.cc"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g   -std=c++14 -o CMakeFiles/CloudSegmentaion.dir/include/pose_graph/PoseGraphBuilder.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/include/pose_graph/PoseGraphBuilder.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/include/pose_graph/PoseGraphBuilder.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g   -std=c++14 -o CMakeFiles/video.dir/src/video.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/video.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/video.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/ekf_2d_v2.dir/src/ekf_v2.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v2.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v2.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/eigen3 -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -I/usr/include/pcl-1.10 -I/usr/include/ni -I/usr/include/openni2 -I/home/liam/catkin_ws_aug/src/shapefitting/include    -fopenmp -g   -std=c++14 -o CMakeFiles/ekf_2d_v4.dir/src/ekf_v4.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v4.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/ekf_v4.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build",
+  "command": "/usr/bin/c++  -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKAGE_NAME=\\\"patchworkpp\\\" -Dqh_QHpointer -DvtkRenderingContext2D_AUTOINIT=\"1(vtkRenderingContextOpenGL2)\" -DvtkRenderingCore_AUTOINIT=\"3(vtkInteractionStyle,vtkRenderingFreeType,vtkRenderingOpenGL2)\" -I/home/liam/slambook/3rdparty/Sophus -I/usr/include/suitesparse -I/usr/include/mlpack -I/home/liam/catkin_ws_aug/src/shapefitting/build/devel/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/home/liam/catkin_ws_aug/src/shapefitting/include -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/eigen3 -isystem /usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/ni -isystem /usr/include/openni2    -fopenmp -g   -std=c++14 -o CMakeFiles/offline_kitti.dir/src/offline_kitti.cpp.o -c /home/liam/catkin_ws_aug/src/shapefitting/src/offline_kitti.cpp",
+  "file": "/home/liam/catkin_ws_aug/src/shapefitting/src/offline_kitti.cpp"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build/gtest/googlemock",
+  "command": "/usr/bin/c++  -DGTEST_CREATE_SHARED_LIBRARY=1 -Dgmock_main_EXPORTS -isystem /usr/src/googletest/googlemock/include -isystem /usr/src/googletest/googlemock -isystem /usr/src/googletest/googletest/include -isystem /usr/src/googletest/googletest  -g -fPIC   -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -DGTEST_HAS_PTHREAD=1 -std=c++11 -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /usr/src/googletest/googlemock/src/gmock_main.cc",
+  "file": "/usr/src/googletest/googlemock/src/gmock_main.cc"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build/gtest/googlemock",
+  "command": "/usr/bin/c++  -DGTEST_CREATE_SHARED_LIBRARY=1 -Dgmock_EXPORTS -I/usr/src/googletest/googlemock/include -I/usr/src/googletest/googlemock -isystem /usr/src/googletest/googletest/include -isystem /usr/src/googletest/googletest  -g -fPIC   -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -DGTEST_HAS_PTHREAD=1 -std=c++11 -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /usr/src/googletest/googlemock/src/gmock-all.cc",
+  "file": "/usr/src/googletest/googlemock/src/gmock-all.cc"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build/gtest/googletest",
+  "command": "/usr/bin/c++  -DGTEST_CREATE_SHARED_LIBRARY=1 -Dgtest_main_EXPORTS -isystem /usr/src/googletest/googletest/include -isystem /usr/src/googletest/googletest  -g -fPIC   -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -DGTEST_HAS_PTHREAD=1 -std=c++11 -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /usr/src/googletest/googletest/src/gtest_main.cc",
+  "file": "/usr/src/googletest/googletest/src/gtest_main.cc"
+},
+{
+  "directory": "/home/liam/catkin_ws_aug/src/shapefitting/build/gtest/googletest",
+  "command": "/usr/bin/c++  -DGTEST_CREATE_SHARED_LIBRARY=1 -Dgtest_EXPORTS -I/usr/src/googletest/googletest/include -I/usr/src/googletest/googletest  -g -fPIC   -Wall -Wshadow -Wno-error=dangling-else -DGTEST_HAS_PTHREAD=1 -fexceptions -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -std=c++11 -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /usr/src/googletest/googletest/src/gtest-all.cc",
+  "file": "/usr/src/googletest/googletest/src/gtest-all.cc"
+}
+]
