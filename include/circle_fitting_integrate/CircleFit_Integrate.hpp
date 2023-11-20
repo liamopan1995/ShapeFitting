@@ -564,16 +564,21 @@ void Stem::get_averages(int MIN_NUM_CIRCLE){
             Pz_av += circle.Pz;
             r_av += circle.r;
             s_av += circle.s; 
-            if(circle.Pz>Pz_top)
-            {
-                Pz_top=circle.Pz;
-                Px_top=circle.Px;Py_top=circle.Py;     
-            }
-            if(circle.Pz<Pz_bottom)
-            {
-                Pz_bottom=circle.Pz;
-                Px_bottom=circle.Px;Py_bottom=circle.Py;
-            }
+            // find the top and bottom x,y,z 
+            // commented out in 14 Nov.
+            // if(circle.Pz>Pz_top)
+            // {
+            //     Pz_top=circle.Pz;
+            //     Px_top=circle.Px;
+            //     Py_top=circle.Py;     
+            // }
+            // if(circle.Pz<Pz_bottom)
+            // {
+            //     Pz_bottom=circle.Pz;
+            //     Px_bottom=circle.Px;
+            //     Py_bottom=circle.Py;
+            // }
+
         }
         Px_av /=num_circle;
         Py_av /=num_circle;

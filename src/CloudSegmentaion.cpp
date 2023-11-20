@@ -53,7 +53,13 @@ class cloudSegmentation
 private:
 
     Single_scan single_scan;
-    vector<Single_scan> scans;
+    vector<Single_scan> scans; //  corresponds to single_scan.txt
+/************************************** 20 Nov ************************************************/
+    
+
+
+/************************************** End 20 No v************************************************/
+
     ros::NodeHandle nh;
     ros::NodeHandle pnh;
 
@@ -409,7 +415,7 @@ public:
             
             if(viewmode==2){
             /*
-            Start of cylinder (made of circles) visualizer
+            Start of cylinder (made of a set of vertically aligned circles) visualizer
             */
                 // See if the result is a valid circle
                 
@@ -417,7 +423,7 @@ public:
 
 
                     // is there a way to add a matrix of points to point cloud without for loop ?
-                    // se this https://www.jianshu.com/p/5b0a81855a47
+                    // read this https://www.jianshu.com/p/5b0a81855a47
 
 
                     // Here we further store the circle into a data structure : stem
@@ -550,10 +556,18 @@ public:
         if(single_scan.tree_infos_.size() > MIN_STEM_NUM ){
             std::cout<< "\n single_scan.tree_infos\n"<<single_scan.tree_infos_.size();
             scans.push_back(single_scan);// optimizing with std::move is possible here
+            
             std::cout<< "\n scans 's size\n"<<scans.size()<<std::endl;
             std::cout<< "\n last single scan 's size\n"<<scans.back().tree_infos_.size()<<std::endl;
             // illegal visiting of back() will cause the funtion  to be out  of work
         }
+
+        // After a sincle_scan is generated: ( which has to have the infos like a single_scan.txt does):
+
+        // 1. render( reconstruct the data structe to fit with the _____.cpp)
+        // 2. run scan to scan ICP 
+        // 3. maitain a global stem map, local stem map, odometry and pose2posetranslation data structures.
+        // 4. if condition to run graph optimization is met, construct the pose graph and solve  
     }
 
 
