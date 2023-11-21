@@ -3,6 +3,10 @@
 #define PCL_NO_PRECOMPILE
 
 #include <ros/ros.h>
+#include <nav_msgs/Path.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/Marker.h>
 #include <signal.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -17,6 +21,7 @@
 
 #include "icp/icp2d.h"
 #include "pose_graph/PoseGraphBuilder.hpp"
+#include <g2o/types/slam2d/types_slam2d.h>
 // #include "utilities/CircleClsuter.hpp"
 
 // TODO : 0. Organize the file into hpp, cpp. the current file is too messy,  and add comments to each function about its usage
@@ -50,7 +55,7 @@ const int viewmode = 0;
 const int MIN_STEM_NUM =3;
 
 int pose_i = 1;
-
+int failure_num = 0;
 // write a class which iherits from the class Patchworkpp
 class cloudSegmentation
 {
@@ -78,6 +83,8 @@ private:
     ros::Publisher pubGroundCloud;
     ros::Publisher pubStemCloud;
     ros::Publisher pubTrunksCluster;
+    ros::Publisher pubPath;
+    ros::Publisher pubLandmarks;
 
     // debugging use only
     ros::Publisher pubDebug;
@@ -158,6 +165,10 @@ public:
         pubGroundCloud = nh.advertise<sensor_msgs::PointCloud2>("/ground_cloud", 1);
         pubStemCloud = nh.advertise<sensor_msgs::PointCloud2>("/stem_cloud", 1);
         pubTrunksCluster = nh.advertise<sensor_msgs::PointCloud2>("clustered_cloud_trunks", 1);
+        pubPath = nh.advertise<nav_msgs::Path>("path_topic", 1000);
+        pubLandmarks= nh.advertise<visualization_msgs::MarkerArray>("landmarks", 1000);
+
+
         // for debugging use
         pubDebug = nh.advertise<sensor_msgs::PointCloud2>("/debugging", 1);
 
@@ -590,6 +601,7 @@ public:
             icp_2d.SetTarget(scan_data);
             // if pose estimation failed:
             if (!icp_2d.pose_estimation_3d3d()) {
+                std::cout<<"*********************icp matching failed!**************** "<< failure_num++<<std::endl;
                 return;
             }
             Mat3d R = icp_2d.Get_Odometry().R_;
@@ -633,6 +645,8 @@ public:
                     idx++;
                 }
                 icp_2d.SetSource(scan_data);//oct 18
+            } else {
+                std::cout<<"*********************icp matching failed!**************** "<< failure_num++<<std::endl;
             }
         }       
     }
@@ -650,7 +664,7 @@ public:
 
     /*************************  20 Nov ************************/
     void runPoseGraphOptimization(){
-        std::cout << "runPoseGraphOptimization has been called"<<endl;
+        //std::cout << "runPoseGraphOptimization has been called"<<endl;
         if(pose_i % 3==0 || pose_i==407){
         // Run in every 10 scan
             const char* homeDir = getenv("HOME");
@@ -658,9 +672,17 @@ public:
                                 + "single_scan_" + std::to_string(pose_i) + ".g2o";
             std::cout<< "In iter: "<<pose_i<<endl;
             //Reusing it by  just reseting all vertices and edges at here 
-            poseGraphBuilder.clear_edges_vertices();  
-            poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose);
-            if(pose_i % 3==0 || pose_i==407){
+            poseGraphBuilder.clear_edges_vertices();
+
+            //With/out robust kernel
+            double kernelwidth_SE2 = 5.0;   // ori. 1
+            double kernelwidth_SE2XY = 5.0; // ori. 5
+            bool use_kernel = true;
+            bool save_g2o = false;
+            poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose,use_kernel,kernelwidth_SE2,kernelwidth_SE2XY);
+
+            // Save a .g2o file to local for inspection
+            if(pose_i % 3==0 || pose_i==407&&save_g2o==true){
             // Run in every 50 scan
                 poseGraphBuilder.saveGraph(fullPath);
                 std::cout << "Pose graph optimization completed." << std::endl;
@@ -668,6 +690,66 @@ public:
             
         }
         ++pose_i;
+
+        
+        // Visualization of the trajectory and landmarks
+        nav_msgs::Path path;
+        visualization_msgs::MarkerArray marker_array;
+        path.header.stamp = ros::Time::now();
+        path.header.frame_id = "world";  // Adjust the frame_id as per your setup
+
+        for (auto it = poseGraphBuilder.optimizer_.vertices().begin(); it != poseGraphBuilder.optimizer_.vertices().end(); ++it) {
+            g2o::OptimizableGraph::Vertex* v = static_cast<g2o::OptimizableGraph::Vertex*>(it->second);
+
+
+            if (auto pose_vertex = dynamic_cast<g2o::VertexSE2*>(v)) {
+                geometry_msgs::PoseStamped pose_stamped;
+                pose_stamped.header = path.header;
+
+                // Extracting the pose from the vertex
+                pose_stamped.pose.position.x = pose_vertex->estimate().translation().x();
+                pose_stamped.pose.position.y = pose_vertex->estimate().translation().y();
+                pose_stamped.pose.position.z = 0; // For 2D, z is typically 0
+
+                tf::Quaternion q;
+                q.setRPY(0, 0, pose_vertex->estimate().rotation().angle());
+                tf::quaternionTFToMsg(q, pose_stamped.pose.orientation);
+
+                path.poses.push_back(pose_stamped);
+            }
+
+            if (auto landmark_vertex = dynamic_cast<g2o::VertexPointXY*>(v)) {
+                visualization_msgs::Marker marker;
+                marker.header.frame_id = "world";  // or your relevant frame
+                marker.header.stamp = ros::Time::now();
+                marker.ns = "landmarks";
+                marker.id = landmark_vertex->id(); // Unique ID for the landmark
+                marker.type = visualization_msgs::Marker::CYLINDER; // Marker's shape
+                marker.action = visualization_msgs::Marker::ADD;
+                
+                marker.pose.position.x = landmark_vertex->estimate()[0];
+                marker.pose.position.y = landmark_vertex->estimate()[1];
+                marker.pose.orientation.x = 0.0;
+                marker.pose.orientation.y = 0.0;
+                marker.pose.orientation.z = 0.0;
+                marker.pose.orientation.w = 1.0; // Identity quaternion
+
+                marker.scale.x = 0.5; // Size of the marker
+                marker.scale.y = 0.5;
+                marker.scale.z = 2;
+
+                marker.color.a = 1.0; // alpha
+                marker.color.r = 1.0; // Red color
+                marker.color.g = 0.0;
+                marker.color.b = 0.0;
+
+                marker_array.markers.push_back(marker);
+            }
+        }
+
+        pubPath.publish(path);
+        pubLandmarks.publish(marker_array);
+
     }
     /*************************  End 20 Nov ************************/
     void projectTo3D()

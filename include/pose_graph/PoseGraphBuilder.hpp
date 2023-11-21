@@ -13,25 +13,35 @@
 #include <limits>
 class PoseGraphBuilder {
 public:
+    g2o::SparseOptimizer optimizer_;
     std::vector<Vec6d> clusteredData_;
     PoseGraphBuilder();
 
     void build_optimize_Graph(const std::vector<Vec6d>& globalMap, 
                     std::vector<Vec6d> localMap, 
                     const std::vector<MovementData>& odometry,
-                    const std::vector<MovementData>& translationPose2Pose);
+                    const std::vector<MovementData>& translationPose2Pose,
+                    bool  use_kernel=false,
+                    double kernelwidth_SE2=1,
+                    double kernelwidth_SE2XY=1);
     void saveGraph();
     void saveGraph(std::string location);
     void clear_edges_vertices();
 
 private:
-    g2o::SparseOptimizer optimizer_;
+    
     void initializeOptimizer();
     void clusterData(const std::vector<Vec6d>& globalMap);
     void addVerticesAndEdges(   
                              std::vector<Vec6d> localMap, 
                              const std::vector<MovementData>& odometry,
                              const std::vector<MovementData>& translationPose2Pose);
+    void addVerticesAndEdges_kernelized(
+                             std::vector<Vec6d> localMap, 
+                             const std::vector<MovementData>& odometry,
+                             const std::vector<MovementData>& translationPose2Pose,
+                             double kernelwidth_SE2,
+                             double kernelwidth_SE2XY);
     // infomation matrice
     Mat3d information_edge_se2_;
     Mat2d information_edge_xy_;

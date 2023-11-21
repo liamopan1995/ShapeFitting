@@ -1740,58 +1740,6 @@ jsk_recognition_msgs_generate_messages_cpp/fast:
 	$(MAKE) -f include/jsk_recognition_msgs/CMakeFiles/jsk_recognition_msgs_generate_messages_cpp.dir/build.make include/jsk_recognition_msgs/CMakeFiles/jsk_recognition_msgs_generate_messages_cpp.dir/build
 .PHONY : jsk_recognition_msgs_generate_messages_cpp/fast
 
-#=============================================================================
-# Target rules for targets named gmock_main
-
-# Build rule for target.
-gmock_main: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 gmock_main
-.PHONY : gmock_main
-
-# fast build rule for target.
-gmock_main/fast:
-	$(MAKE) -f gtest/googlemock/CMakeFiles/gmock_main.dir/build.make gtest/googlemock/CMakeFiles/gmock_main.dir/build
-.PHONY : gmock_main/fast
-
-#=============================================================================
-# Target rules for targets named gmock
-
-# Build rule for target.
-gmock: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 gmock
-.PHONY : gmock
-
-# fast build rule for target.
-gmock/fast:
-	$(MAKE) -f gtest/googlemock/CMakeFiles/gmock.dir/build.make gtest/googlemock/CMakeFiles/gmock.dir/build
-.PHONY : gmock/fast
-
-#=============================================================================
-# Target rules for targets named gtest_main
-
-# Build rule for target.
-gtest_main: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 gtest_main
-.PHONY : gtest_main
-
-# fast build rule for target.
-gtest_main/fast:
-	$(MAKE) -f gtest/googletest/CMakeFiles/gtest_main.dir/build.make gtest/googletest/CMakeFiles/gtest_main.dir/build
-.PHONY : gtest_main/fast
-
-#=============================================================================
-# Target rules for targets named gtest
-
-# Build rule for target.
-gtest: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 gtest
-.PHONY : gtest
-
-# fast build rule for target.
-gtest/fast:
-	$(MAKE) -f gtest/googletest/CMakeFiles/gtest.dir/build.make gtest/googletest/CMakeFiles/gtest.dir/build
-.PHONY : gtest/fast
-
 include/icp/bfnn.o: include/icp/bfnn.cc.o
 
 .PHONY : include/icp/bfnn.o
@@ -2412,10 +2360,6 @@ help:
 	@echo "... jsk_recognition_msgs_generate_messages"
 	@echo "... jsk_recognition_msgs_gencpp"
 	@echo "... jsk_recognition_msgs_generate_messages_cpp"
-	@echo "... gmock_main"
-	@echo "... gmock"
-	@echo "... gtest_main"
-	@echo "... gtest"
 	@echo "... include/icp/bfnn.o"
 	@echo "... include/icp/bfnn.i"
 	@echo "... include/icp/bfnn.s"

@@ -60,9 +60,9 @@ include/jsk_recognition_msgs/CMakeFiles/jsk_recognition_msgs_generate_messages_p
 devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py: /opt/ros/noetic/lib/genpy/genmsg_py.py
 devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py: ../include/jsk_recognition_msgs/msg/PolygonArray.msg
 devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py: /opt/ros/noetic/share/geometry_msgs/msg/PolygonStamped.msg
+devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py: /opt/ros/noetic/share/geometry_msgs/msg/Point32.msg
 devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py: /opt/ros/noetic/share/geometry_msgs/msg/Polygon.msg
 devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py: /opt/ros/noetic/share/std_msgs/msg/Header.msg
-devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py: /opt/ros/noetic/share/geometry_msgs/msg/Point32.msg
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --blue --bold --progress-dir=/home/liam/catkin_ws_aug/src/shapefitting/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating Python from MSG jsk_recognition_msgs/PolygonArray"
 	cd /home/liam/catkin_ws_aug/src/shapefitting/build/include/jsk_recognition_msgs && ../../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genpy/cmake/../../../lib/genpy/genmsg_py.py /home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg -Ijsk_recognition_msgs:/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg -Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg -Isensor_msgs:/opt/ros/noetic/share/sensor_msgs/cmake/../msg -Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg -p jsk_recognition_msgs -o /home/liam/catkin_ws_aug/src/shapefitting/build/devel/lib/python3/dist-packages/jsk_recognition_msgs/msg
 

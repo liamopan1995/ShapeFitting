@@ -179,9 +179,3 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/jsk_recognition_msgs" TYPE FILE FILES "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/package.xml")
 endif()
 
-if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for each subdirectory.
-  include("/home/liam/catkin_ws_aug/src/shapefitting/build/gtest/cmake_install.cmake")
-
-endif()
-

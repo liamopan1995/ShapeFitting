@@ -3,12 +3,13 @@
 
 int Icp2d::check_matches(std::vector<std::pair<size_t, size_t>>& matches){
     int i= 0;
-    const double MAX_DISTANCE_SQUARED =    2.5;
+    const double MAX_DISTANCE_SQUARED =    6.5;
                                            // 2.5 was great//2.5; we increase the threshold
                                            // to handel the case between two two scans to be matched,
                                            // there are scans discarded for insufficient match number
                                            // it is obvious that to this case the distance between same
                                            // object in two scans of diff time points will be larger
+                                           //  it was 2.5 before tunning process at 21 Nov.
 
     for(int j=0;j<matches.size();j++){
         double dis = (target_[matches[j].first] - source_[matches[j].second]).squaredNorm();
@@ -22,7 +23,7 @@ int Icp2d::check_matches(std::vector<std::pair<size_t, size_t>>& matches){
 }
 
 bool Icp2d::pose_estimation_3d3d() {
-    const int MIN_MATCHED_PAIR = 3;  // 3 is the minimal number of equations to determine 3 unkonw factors
+    const int MIN_MATCHED_PAIR = 3;  // 2 is the minimal number of equations to determine 3 unkonw factors
     std::vector<std::pair<size_t, size_t>> matches;
     bfnn_cloud_mt(target_, source_, matches);
     // bfnn_cloud_mt(source_, target_, matches);

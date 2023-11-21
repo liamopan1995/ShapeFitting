@@ -1,18 +1,18 @@
 
 #include "PoseGraphBuilder.hpp"
-#include <g2o/types/slam2d/types_slam2d.h>
 #include <g2o/core/optimization_algorithm_gauss_newton.h>
 #include <g2o/solvers/cholmod/linear_solver_cholmod.h>
 #include <g2o/types/slam2d/types_slam2d.h>
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
-#include <g2o/core/optimization_algorithm_gauss_newton.h>
-#include <g2o/solvers/cholmod/linear_solver_cholmod.h>
 #include <g2o/solvers/dense/linear_solver_dense.h>
+#include <g2o/core/robust_kernel_impl.h>
 
 PoseGraphBuilder::PoseGraphBuilder() {
     initializeOptimizer();
+    // Choice one of following settings for infomation matrix:
+
     information_edge_se2_ = Mat3d::Identity();
     information_edge_xy_ = Mat2d::Identity();
     // information_edge_se2_ << 100.0, 0.0, 0.0,
@@ -23,10 +23,10 @@ PoseGraphBuilder::PoseGraphBuilder() {
 }
 void PoseGraphBuilder::clear_edges_vertices(){
     optimizer_.clear();
-    std::cout<<"all vertices and edges are deleted, ready for new problem"<<std::endl;
+    //std::cout<<"all vertices and edges are deleted, ready for new problem"<<std::endl;
 }
 void PoseGraphBuilder::initializeOptimizer() {
-    optimizer_.setVerbose(true);
+    optimizer_.setVerbose(false);
     // Choose the linear solver - CHOLMOD ( this one is especially fast)
     auto linearSolver = std::make_unique<g2o::LinearSolverCholmod<g2o::BlockSolverX::PoseMatrixType>>();
 
@@ -43,24 +43,24 @@ void PoseGraphBuilder::initializeOptimizer() {
 void PoseGraphBuilder::build_optimize_Graph(const std::vector<Vec6d>& globalMap, 
                                   std::vector<Vec6d> localMap, 
                                   const std::vector<MovementData>& odometry,
-                                  const std::vector<MovementData>& translationPose2Pose) {
+                                  const std::vector<MovementData>& translationPose2Pose,
+                                  bool  use_kernel,
+                                  double kernelwidth_SE2,
+                                  double kernelwidth_SE2XY
+                                  ) {
     clusterData(globalMap);
-    addVerticesAndEdges( localMap, odometry, translationPose2Pose);
+
+    if (!use_kernel) {
+        addVerticesAndEdges( localMap, odometry, translationPose2Pose);
+    } else {
+        addVerticesAndEdges_kernelized( localMap, odometry, translationPose2Pose, kernelwidth_SE2,kernelwidth_SE2XY);
+    }
+    
     optimizer_.initializeOptimization();
-    optimizer_.optimize(30); // You might want to make the number of iterations configurable
-}
-
-void PoseGraphBuilder::saveGraph() {
-
-    optimizer_.save("../result_g2o/result_2d.g2o");
-}
-void PoseGraphBuilder::saveGraph(std::string filename) {
-
-    optimizer_.save(filename.c_str());
+    optimizer_.optimize(17);  // Set maximal iteration num
 }
 
 void PoseGraphBuilder::clusterData(const std::vector<Vec6d>& globalMap) {
-        // Assuming global_map is a std::vector<Vec6d>
     clusteredData_.clear();
 
     arma::mat data;
@@ -107,7 +107,7 @@ void PoseGraphBuilder::addVerticesAndEdges(
 
     //  Update local_map so it now has global cluster idex
     if(clusteredData_.size() ==localMap.size()) {
-        std::cout<<"global map and local map are of same size" <<std::endl;
+        //std::cout<<"global map and local map are of same size" <<std::endl;
         for(int i=0;i<localMap.size();++i) {
             localMap[i](5) = clusteredData_[i](5);
             // cout<<global_map[i].transpose()<<"     global"<<endl;
@@ -165,6 +165,7 @@ void PoseGraphBuilder::addVerticesAndEdges(
             vertex->setId(clusterId);
             vertex->setEstimate(Eigen::Vector2d(clusteredData_[i](0), clusteredData_[i](1))); // Set the x, y position
             optimizer_.addVertex(vertex);
+            //if(vertex_cnt<10) { vertex->setFixed(true);}// set first few landmarks fixed.
             vertex_cnt++;
             processedClusters.insert(clusterId); // Mark this clusterId as processed
         }
@@ -195,7 +196,7 @@ void PoseGraphBuilder::addVerticesAndEdges(
         if(vertex_se2_id == vertex_cnt + 1    ) { //+49
             v->setFixed(true);
             optimizer_.addVertex(v); 
-            //cout<< "first node is set fix, first node id: "<< vertex_se2_id <<"\n";
+            std::cout<< "first node is set fix, first node id: "<< vertex_se2_id <<"\n";
             
         } else {
             optimizer_.addVertex(v);
@@ -266,3 +267,167 @@ void PoseGraphBuilder::addVerticesAndEdges(
 
 }
 
+
+void PoseGraphBuilder::addVerticesAndEdges_kernelized(
+                                           std::vector<Vec6d> localMap, 
+                                           const std::vector<MovementData>& odometry,
+                                           const std::vector<MovementData>& translationPose2Pose,
+                                           double kernelwidth_SE2,
+                                           double kernelwidth_SE2XY){
+
+    if(clusteredData_.size() ==localMap.size()) {
+        //std::cout<<"global map and local map are of same size" <<std::endl;
+        for(int i=0;i<localMap.size();++i) {
+            localMap[i](5) = clusteredData_[i](5);
+        }
+    }
+    
+    // First, calculate the centroids of each cluster  in clusteredData_
+    std::unordered_map<size_t, std::pair<Vec6d, size_t>> clusterSums;
+    for (const auto& point : clusteredData_) {
+        size_t clusterId = static_cast<size_t>(point(5, 0));
+        if (clusterId != std::numeric_limits<size_t>::max()) {
+            clusterSums[clusterId].first(0, 0) += point(0, 0); // Sum x
+            clusterSums[clusterId].first(1, 0) += point(1, 0); // Sum y
+            clusterSums[clusterId].second += 1; // Count
+        }
+    }
+    std::unordered_map<size_t, Vec6d> centroids;
+    for (const auto& pair : clusterSums) {
+        size_t clusterId = pair.first;
+        Vec6d sum = pair.second.first;
+        size_t count = pair.second.second;
+        centroids[clusterId](0, 0) = sum(0, 0) / count; // Average x
+        centroids[clusterId](1, 0) = sum(1, 0) / count; // Average y
+    }
+
+    // Now replace x and y of each point with the centroid of its cluster
+    for (auto& point : clusteredData_) {
+        size_t clusterId = static_cast<size_t>(point(5, 0));
+        if (clusterId != std::numeric_limits<size_t>::max()) {
+            point(0, 0) = centroids[clusterId](0, 0); // Centroid x
+            point(1, 0) = centroids[clusterId](1, 0); // Centroid y
+        }
+    }
+
+    std::unordered_set<size_t> processedClusters;
+    int vertex_cnt = 0;
+    for (size_t i = 0; i < clusteredData_.size(); ++i) {
+        size_t clusterId = clusteredData_[i](5,0);
+
+        if (clusterId == -1 || clusterId == std::numeric_limits<size_t>::max() || processedClusters.count(clusterId) > 0) {
+            // Skip if it's noise or already processed
+            continue;
+        } else {
+            // Process this cluster
+            g2o::VertexPointXY* vertex = new g2o::VertexPointXY();
+            vertex->setId(clusterId);
+            vertex->setEstimate(Eigen::Vector2d(clusteredData_[i](0), clusteredData_[i](1))); // Set the x, y position
+            optimizer_.addVertex(vertex);
+            vertex_cnt++;
+            processedClusters.insert(clusterId); // Mark this clusterId as processed
+        }
+    }
+    //cout<< "vertex_cnt in the end :"<< vertex_cnt<<endl;// Notice: Vertex idx is started from 0 !
+
+    int iter_local_map = 0;
+
+    // in order to differ from the idices occupied by VertexXY in above.
+    for ( size_t i = 0; i < odometry.size() ; ++i) {
+        // int vertex_se2_id = i + vertex_cnt + 1; // this is the vertex ID we going to start with
+        int vertex_se2_id = i + vertex_cnt + 1   ; //  additionally +49 if want to let it be the same as the result in python
+        auto pose = odometry[i];
+        double timestamp = pose.timestamp_;
+        Eigen::Vector3d euler_angles = pose.R_.eulerAngles(2, 1, 0);
+        double x = pose.p_(0);
+        double y = pose.p_(1);
+        double yaw = euler_angles[0] ;
+
+        g2o::VertexSE2* v = new g2o::VertexSE2();
+        v->setId(vertex_se2_id);
+        v->setEstimate(g2o::SE2(x, y, yaw));
+        //cout<< "new vertex ,  id: "<< vertex_se2_id <<"added\n";
+        // Fix the first vertex
+        if(vertex_se2_id == vertex_cnt + 1    ) { //+49
+            v->setFixed(true);
+            optimizer_.addVertex(v); 
+            //cout<< "first node is set fix, first node id: "<< vertex_se2_id <<"\n";
+            
+        } else {
+            optimizer_.addVertex(v);
+            // set a edege EDGE_SE2 to the previous  node : i.e : vertex_se2_id-1
+            int to_idx = vertex_se2_id;
+            int from_idx = to_idx-1; 
+
+            auto translation = translationPose2Pose[i-1];
+            Eigen::Vector3d euler_angles = translation.R_.eulerAngles(2, 1, 0);
+            double x = translation.p_(0);
+            double y = translation.p_(1);
+            double yaw = euler_angles[0];
+   
+            //cout<< "x ,y ,yaw : "<< x<<" "<< y<< " "<<yaw<<endl;
+            g2o::EdgeSE2* e = new g2o::EdgeSE2();
+            // Set the connecting vertices (nodes)
+            e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer_.vertex(from_idx)));
+            e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer_.vertex(to_idx)));
+
+            // Set the measurement (relative pose)
+            g2o::SE2 relative_pose(x, y, yaw);
+            e->setMeasurement(relative_pose);
+            e->setInformation(information_edge_se2_);// defined at the beginning of main()
+
+            // Add robust kernel to the edge
+            g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber();
+            rk->setDelta(kernelwidth_SE2);
+            e->setRobustKernel(rk);
+
+            // Add the edge to the optimizer
+            optimizer_.addEdge(e);
+        }
+
+        while(true){
+
+            if (timestamp == localMap[iter_local_map](3)) {
+                int vertex_xy_id = localMap[iter_local_map](5);
+    
+                if (vertex_xy_id == -1){
+                    //cout<<" 6th Element equal -1: skipping it" << endl;
+                    // Do nothing since it is a outlier
+                } else {
+                    double x =localMap[iter_local_map](0);
+                    double y =localMap[iter_local_map](1);
+
+                    g2o::EdgeSE2PointXY* e = new g2o::EdgeSE2PointXY();
+                    // Set the connecting vertices (nodes)
+                    e->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer_.vertex(vertex_se2_id)));
+                    e->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(optimizer_.vertex(vertex_xy_id)));
+                    //Eigen::Vector2d position(x, y); // Assuming x and y are defined earlier as the positions
+                    e->setMeasurement(Eigen::Vector2d(x, y));
+                    e->setInformation(information_edge_xy_); // Define information_edge_xy appropriately
+                    
+                    
+                    // Add robust kernel to the edge
+                    g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber();
+                    rk->setDelta(kernelwidth_SE2XY);
+                    e->setRobustKernel(rk);
+            
+                    optimizer_.addEdge(e);
+                    //cout << "Edge XY has been added in between from: " << vertex_se2_id << " to " << vertex_xy_id << endl;
+
+                }
+                ++iter_local_map;
+            } else {break;}
+            
+        }
+    }
+
+}
+
+
+
+void PoseGraphBuilder::saveGraph() {
+    optimizer_.save("../result_g2o/result_2d.g2o");
+}
+void PoseGraphBuilder::saveGraph(std::string filename) {
+    optimizer_.save(filename.c_str());
+}
