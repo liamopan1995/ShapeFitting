@@ -2,7 +2,6 @@
 #include "PoseGraphBuilder.hpp"
 #include <g2o/core/optimization_algorithm_gauss_newton.h>
 #include <g2o/solvers/cholmod/linear_solver_cholmod.h>
-#include <g2o/types/slam2d/types_slam2d.h>
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/core/block_solver.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
@@ -173,7 +172,7 @@ void PoseGraphBuilder::addVerticesAndEdges(
     //cout<< "vertex_cnt in the end :"<< vertex_cnt<<endl;// Notice: Vertex idx is started from 0 !
 
     int iter_local_map = 0;
-
+    //last_pose_id_ = vertex_cnt + odometry.size();
     // in order to differ from the idices occupied by VertexXY in above.
     for ( size_t i = 0; i < odometry.size() ; ++i) {
         // int vertex_se2_id = i + vertex_cnt + 1; // this is the vertex ID we going to start with
@@ -200,6 +199,11 @@ void PoseGraphBuilder::addVerticesAndEdges(
             
         } else {
             optimizer_.addVertex(v);
+
+            // g2o::OptimizableGraph::Vertex* retrievedVertex = optimizer_.vertex(vertex_se2_id);
+            // last_se2_ = dynamic_cast<g2o::VertexSE2*>(retrievedVertex);
+
+
             // set a edege EDGE_SE2 to the previous  node : i.e : vertex_se2_id-1
             int to_idx = vertex_se2_id;
             int from_idx = to_idx-1; 

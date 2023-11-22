@@ -3,13 +3,18 @@
 
 int Icp2d::check_matches(std::vector<std::pair<size_t, size_t>>& matches){
     int i= 0;
-    const double MAX_DISTANCE_SQUARED =    6.5;
+    const double MAX_DISTANCE_SQUARED =    6.5;// Value exceeds this threshold will be abandoned.
+                                               // otherwise it always choose the pair which has minimal dist.
                                            // 2.5 was great//2.5; we increase the threshold
                                            // to handel the case between two two scans to be matched,
                                            // there are scans discarded for insufficient match number
                                            // it is obvious that to this case the distance between same
                                            // object in two scans of diff time points will be larger
                                            //  it was 2.5 before tunning process at 21 Nov.
+                                           //  after 21 Nov. MAX_DISTANCE_SQUARED is set to 6.5,
+                                           //  this has significantly mediated the problem
+                                           //  of frequently occuring matching failure while it was set to 2.5
+                                           //  which was good in unit test but performs bad during online running 
 
     for(int j=0;j<matches.size();j++){
         double dis = (target_[matches[j].first] - source_[matches[j].second]).squaredNorm();
@@ -19,6 +24,10 @@ int Icp2d::check_matches(std::vector<std::pair<size_t, size_t>>& matches){
         } 
     }
     matches = std::vector<std::pair<size_t, size_t>>(matches.begin(),matches.begin()+i);
+    // Todo:
+    // compute the mean and sigma of distances ,then apply the operation in above one more time
+    // this might be a effective way to reject outliers while having a bigger threshold (MAX_DISTANCE_SQUARED)
+    // 2. Try the gaussian approach
     return i;
 }
 

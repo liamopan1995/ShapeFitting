@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 #include <signal.h>
@@ -85,6 +86,7 @@ private:
     ros::Publisher pubTrunksCluster;
     ros::Publisher pubPath;
     ros::Publisher pubLandmarks;
+    ros::Publisher pubPose;
 
     // debugging use only
     ros::Publisher pubDebug;
@@ -167,7 +169,7 @@ public:
         pubTrunksCluster = nh.advertise<sensor_msgs::PointCloud2>("clustered_cloud_trunks", 1);
         pubPath = nh.advertise<nav_msgs::Path>("path_topic", 1000);
         pubLandmarks= nh.advertise<visualization_msgs::MarkerArray>("landmarks", 1000);
-
+        pubPose = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("pose_topic", 1000);
 
         // for debugging use
         pubDebug = nh.advertise<sensor_msgs::PointCloud2>("/debugging", 1);
@@ -665,8 +667,9 @@ public:
     /*************************  20 Nov ************************/
     void runPoseGraphOptimization(){
         //std::cout << "runPoseGraphOptimization has been called"<<endl;
-        if(pose_i % 3==0 || pose_i==407){
-        // Run in every 10 scan
+        // Run in every 3 scan
+        if(pose_i % 3==0 || pose_i==407){    //pose_i % 3==0
+        
             const char* homeDir = getenv("HOME");
             std::string fullPath = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/g2o_result/"
                                 + "single_scan_" + std::to_string(pose_i) + ".g2o";
@@ -678,11 +681,11 @@ public:
             double kernelwidth_SE2 = 5.0;   // ori. 1
             double kernelwidth_SE2XY = 5.0; // ori. 5
             bool use_kernel = true;
-            bool save_g2o = false;
+            bool save_g2o = true;
             poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose,use_kernel,kernelwidth_SE2,kernelwidth_SE2XY);
 
             // Save a .g2o file to local for inspection
-            if(pose_i % 3==0 || pose_i==407&&save_g2o==true){
+            if( pose_i%3==0  &&  pose_i>230  &&  save_g2o==true){
             // Run in every 50 scan
                 poseGraphBuilder.saveGraph(fullPath);
                 std::cout << "Pose graph optimization completed." << std::endl;
@@ -694,13 +697,17 @@ public:
         
         // Visualization of the trajectory and landmarks
         nav_msgs::Path path;
+        // path can be replaced by the odometry type , 
+        // timestamp can be stored and later retrieved from a map
+        // velocities can be derived from consective vertices.
         visualization_msgs::MarkerArray marker_array;
+        geometry_msgs::PoseWithCovarianceStamped poseMsg;
         path.header.stamp = ros::Time::now();
         path.header.frame_id = "world";  // Adjust the frame_id as per your setup
 
+        g2o::VertexSE2* lastSE2Vertex = nullptr;
         for (auto it = poseGraphBuilder.optimizer_.vertices().begin(); it != poseGraphBuilder.optimizer_.vertices().end(); ++it) {
             g2o::OptimizableGraph::Vertex* v = static_cast<g2o::OptimizableGraph::Vertex*>(it->second);
-
 
             if (auto pose_vertex = dynamic_cast<g2o::VertexSE2*>(v)) {
                 geometry_msgs::PoseStamped pose_stamped;
@@ -709,13 +716,18 @@ public:
                 // Extracting the pose from the vertex
                 pose_stamped.pose.position.x = pose_vertex->estimate().translation().x();
                 pose_stamped.pose.position.y = pose_vertex->estimate().translation().y();
-                pose_stamped.pose.position.z = 0; // For 2D, z is typically 0
+                //pose_stamped.pose.position.z = 0; // For 2D, z is typically 0
 
                 tf::Quaternion q;
                 q.setRPY(0, 0, pose_vertex->estimate().rotation().angle());
                 tf::quaternionTFToMsg(q, pose_stamped.pose.orientation);
 
                 path.poses.push_back(pose_stamped);
+                // Set lastSE2Vertex to point to the last SE2 vertex
+                if(lastSE2Vertex==nullptr){
+                    lastSE2Vertex = pose_vertex; 
+                }
+                
             }
 
             if (auto landmark_vertex = dynamic_cast<g2o::VertexPointXY*>(v)) {
@@ -729,10 +741,10 @@ public:
                 
                 marker.pose.position.x = landmark_vertex->estimate()[0];
                 marker.pose.position.y = landmark_vertex->estimate()[1];
-                marker.pose.orientation.x = 0.0;
-                marker.pose.orientation.y = 0.0;
-                marker.pose.orientation.z = 0.0;
-                marker.pose.orientation.w = 1.0; // Identity quaternion
+                //marker.pose.orientation.x = 0.0;
+                //marker.pose.orientation.y = 0.0;
+                //marker.pose.orientation.z = 0.0;
+                //marker.pose.orientation.w = 1.0; // Identity quaternion
 
                 marker.scale.x = 0.5; // Size of the marker
                 marker.scale.y = 0.5;
@@ -740,18 +752,41 @@ public:
 
                 marker.color.a = 1.0; // alpha
                 marker.color.r = 1.0; // Red color
-                marker.color.g = 0.0;
-                marker.color.b = 0.0;
+                //marker.color.g = 0.0;
+                //marker.color.b = 0.0;
 
                 marker_array.markers.push_back(marker);
             }
+            
         }
-
         pubPath.publish(path);
         pubLandmarks.publish(marker_array);
+        // **************************  Modification 22 Nov **************************************************//
 
-    }
-    /*************************  End 20 Nov ************************/
+        if (lastSE2Vertex) {
+            geometry_msgs::PoseWithCovarianceStamped poseMsg;
+            // Set the header
+            // Todo:    Make a hash map,  retrieve the exact timestamp and put it into poseMeg
+            // 
+            poseMsg.header = path.header;
+
+            // Set the pose data
+            poseMsg.pose.pose.position.x = lastSE2Vertex->estimate().translation().x();
+            poseMsg.pose.pose.position.y = lastSE2Vertex->estimate().translation().y();
+            //poseMsg.pose.pose.position.z = 0; // For 2D, z is typically 0
+
+            tf::Quaternion q;
+            q.setRPY(0, 0, lastSE2Vertex->estimate().rotation().angle());
+            tf::quaternionTFToMsg(q, poseMsg.pose.pose.orientation);
+
+            // Publish the pose message
+            pubPose.publish(poseMsg);
+        }
+        // **************************  End Modification 22 Nov **************************************************//
+    }   
+    /*************************  End 20 Nov **************************************************************************/
+
+
     void projectTo3D()
     {
         // void projectTo3D(pcl::PointCloud<PointType>::Ptr& nonGroundCloud){
@@ -767,10 +802,10 @@ public:
         projectTo2D();
         removeNan();
         radiusOutlierRemoval();
-        //euclideanClustering(); // do stems grouping
+        //euclideanClustering(); // Do stems grouping
         stemClustering();
         runPoseGraphOptimization();
-        //projectTo3D();
+        //projectTo3D(); // For visualization
     }
 
     void publishCloud()

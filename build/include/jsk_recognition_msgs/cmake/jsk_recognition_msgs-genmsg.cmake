@@ -19,7 +19,7 @@ add_custom_target(jsk_recognition_msgs_generate_messages ALL)
 
 get_filename_component(_filename "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg" NAME_WE)
 add_custom_target(_jsk_recognition_msgs_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "jsk_recognition_msgs" "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg" "geometry_msgs/PolygonStamped:geometry_msgs/Point32:geometry_msgs/Polygon:std_msgs/Header"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "jsk_recognition_msgs" "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg" "geometry_msgs/PolygonStamped:geometry_msgs/Polygon:std_msgs/Header:geometry_msgs/Point32"
 )
 
 #
@@ -31,7 +31,7 @@ add_custom_target(_jsk_recognition_msgs_generate_messages_check_deps_${_filename
 _generate_msg_cpp(jsk_recognition_msgs
   "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/jsk_recognition_msgs
 )
 
@@ -64,7 +64,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS jsk_recognition_msgs_generate_messa
 _generate_msg_eus(jsk_recognition_msgs
   "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/jsk_recognition_msgs
 )
 
@@ -97,7 +97,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS jsk_recognition_msgs_generate_messa
 _generate_msg_lisp(jsk_recognition_msgs
   "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/jsk_recognition_msgs
 )
 
@@ -130,7 +130,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS jsk_recognition_msgs_generate_messa
 _generate_msg_nodejs(jsk_recognition_msgs
   "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/jsk_recognition_msgs
 )
 
@@ -163,7 +163,7 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS jsk_recognition_msgs_generate_messa
 _generate_msg_py(jsk_recognition_msgs
   "/home/liam/catkin_ws_aug/src/shapefitting/include/jsk_recognition_msgs/msg/PolygonArray.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/PolygonStamped.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Polygon.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point32.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/jsk_recognition_msgs
 )
 

@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <Eigen/Dense>
 #include <g2o/core/sparse_optimizer.h>
+#include <g2o/types/slam2d/types_slam2d.h>
 #include "common/utilities.h" // Custom header for utility structures like Vec6d
 #include <mlpack/methods/dbscan/dbscan.hpp>
 #include <armadillo>
@@ -15,6 +16,8 @@ class PoseGraphBuilder {
 public:
     g2o::SparseOptimizer optimizer_;
     std::vector<Vec6d> clusteredData_;
+    //int last_pose_id_;
+    //g2o::VertexSE2* last_se2_;
     PoseGraphBuilder();
 
     void build_optimize_Graph(const std::vector<Vec6d>& globalMap, 
