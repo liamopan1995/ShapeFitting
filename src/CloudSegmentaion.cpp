@@ -576,38 +576,6 @@ public:
     }
 
 
-        
-
-    // void multiThreadedcircleClustering(pcl::PointCloud<pcl::PointXYZLNormal>::Ptr clustered_cloud_stem) {
-    //     pcl::EuclideanClusterExtraction<pcl::PointXYZLNormal> ec;
-
-    //     ec.setClusterTolerance(0.1); 
-    //     ec.setMinClusterSize(4);     
-    //     ec.setMaxClusterSize(1000);
-
-    //     ec.setInputCloud(clustered_cloud_stem); 
-    //     std::vector<pcl::PointIndices> cluster_indices_circle;
-    //     ec.extract(cluster_indices_circle);
-
-    //     for (const pcl::PointIndices &cluster : cluster_indices_circle) {
-    //         // Here you would process each circle cluster
-    //         // For example, fitting a circle on these points
-    //         Eigen::Matrix<reals, Eigen::Dynamic, 3> points_to_fit(cluster.indices.size(), 3);
-
-    //         for (size_t i = 0; i < cluster.indices.size(); ++i) {
-    //             int index = cluster.indices[i];
-    //             points_to_fit.row(i) << clustered_cloud_stem->points[index].normal_x,
-    //                                     clustered_cloud_stem->points[index].normal_y,
-    //                                     clustered_cloud_stem->points[index].z;
-    //         }
-
-    //         Circle circle = CircleFitting_3D(points_to_fit);
-    //         if(circle.s <= Circle::MSE_MAX && circle.r <0.4) {
-    //             stem_candidate.pushCircle(std::move(circle))
-    //         }
-    //     }
-    // }
-
     void multiThreadedcircleClustering(
                             pcl::PointCloud<pcl::PointXYZLNormal>::Ptr clustered_cloud_stem,
                             Stem& stem_candidate
