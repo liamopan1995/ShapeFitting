@@ -44,6 +44,7 @@ generate_messages(
 find_package(PCL 1.7 REQUIRED)
 find_package(Boost 1.54 REQUIRED)
 find_package(OpenMP)
+find_package(Threads REQUIRED)
 find_package(Sophus REQUIRED) 
 if (OPENMP_FOUND)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -117,7 +118,8 @@ add_executable( CloudSegmentaion
 src/CloudSegmentaion.cpp include/icp/bfnn.cc include/icp/icp2d.cc include/pose_graph/PoseGraphBuilder.cpp)
 
 target_link_libraries(CloudSegmentaion 
-${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${Sophus_LIBRARIES} ${ARMADILLO_LIBRARIES} 
+${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${Sophus_LIBRARIES} 
+${ARMADILLO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
 Eigen3::Eigen mlpack g2o_core g2o_stuff g2o_types_slam2d cholmod)
 add_dependencies(CloudSegmentaion patchworkpp_generate_messages_cpp  )
 

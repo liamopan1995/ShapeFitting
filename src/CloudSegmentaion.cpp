@@ -2,6 +2,7 @@
 // For disable PCL complile lib, to use PointXYZIR
 #define PCL_NO_PRECOMPILE
 
+#include <thread>
 #include <ros/ros.h>
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -55,7 +56,7 @@ typedef pcl::PointXYZI PointType;
 const int viewmode = 0;
 const int MIN_STEM_NUM =3;
 
-int pose_i = 1;
+int pose_i = 0;
 int failure_num = 0;
 // write a class which iherits from the class Patchworkpp
 class cloudSegmentation
@@ -355,7 +356,6 @@ public:
         clustered_cloud->is_dense = true;
     }
 
-        
 
     void circleClustering( )
     /*    
@@ -387,9 +387,6 @@ public:
             /*
             Start of cylinder clusters (made of points) visualizer
             */
-                //Generate a random RGB color
-                int32_t rgb_value = generateRandomRGB();
-
                 for (const int index : cluster.indices)
                 {
                     // Create a new point with assigned color
@@ -480,21 +477,16 @@ public:
                     // if we use ICP, which of the two decisions benifits us more?
 
                 }
-
-
                 // Insert the points from single_circle_cloud into clustered_cloud for display
                 if(stem_candidate.num_circle > 6){
                     clustered_cloud->insert(clustered_cloud->end(), cylinder_cloud->begin(), cylinder_cloud->end());            
                 }
-                
             }
-            
             /*
             End of cylinder (made of circles)  visualizer
             */
 
-
-           if(viewmode==0){
+            if(viewmode==0){
             // No visulizer
                 if (circle.s <= Circle::MSE_MAX && circle.r <0.4) {
                     stem_candidate.pushCircle(std::move(circle));
@@ -580,8 +572,139 @@ public:
 
         clustered_cloud->width = clustered_cloud->size();
         clustered_cloud->height = 1;
-        clustered_cloud->is_dense = true;
+        clustered_cloud->is_dense = true;   
+    }
 
+
+        
+
+    // void multiThreadedcircleClustering(pcl::PointCloud<pcl::PointXYZLNormal>::Ptr clustered_cloud_stem) {
+    //     pcl::EuclideanClusterExtraction<pcl::PointXYZLNormal> ec;
+
+    //     ec.setClusterTolerance(0.1); 
+    //     ec.setMinClusterSize(4);     
+    //     ec.setMaxClusterSize(1000);
+
+    //     ec.setInputCloud(clustered_cloud_stem); 
+    //     std::vector<pcl::PointIndices> cluster_indices_circle;
+    //     ec.extract(cluster_indices_circle);
+
+    //     for (const pcl::PointIndices &cluster : cluster_indices_circle) {
+    //         // Here you would process each circle cluster
+    //         // For example, fitting a circle on these points
+    //         Eigen::Matrix<reals, Eigen::Dynamic, 3> points_to_fit(cluster.indices.size(), 3);
+
+    //         for (size_t i = 0; i < cluster.indices.size(); ++i) {
+    //             int index = cluster.indices[i];
+    //             points_to_fit.row(i) << clustered_cloud_stem->points[index].normal_x,
+    //                                     clustered_cloud_stem->points[index].normal_y,
+    //                                     clustered_cloud_stem->points[index].z;
+    //         }
+
+    //         Circle circle = CircleFitting_3D(points_to_fit);
+    //         if(circle.s <= Circle::MSE_MAX && circle.r <0.4) {
+    //             stem_candidate.pushCircle(std::move(circle))
+    //         }
+    //     }
+    // }
+
+    void multiThreadedcircleClustering(
+                            pcl::PointCloud<pcl::PointXYZLNormal>::Ptr clustered_cloud_stem,
+                            Stem& stem_candidate
+                            ) {
+
+        pcl::EuclideanClusterExtraction<pcl::PointXYZLNormal> ec;
+        ec.setClusterTolerance(0.1); 
+        ec.setMinClusterSize(4);     
+        ec.setMaxClusterSize(1000);
+
+        ec.setInputCloud(clustered_cloud_stem); 
+        std::vector<pcl::PointIndices> cluster_indices_circle;
+        ec.extract(cluster_indices_circle);
+
+        for (const pcl::PointIndices &cluster : cluster_indices_circle) {
+            // Process each circle cluster
+            Eigen::Matrix<reals, Eigen::Dynamic, 3> points_to_fit(cluster.indices.size(), 3);
+
+            for (size_t i = 0; i < cluster.indices.size(); ++i) {
+                int index = cluster.indices[i];
+                points_to_fit.row(i) << clustered_cloud_stem->points[index].normal_x,
+                                        clustered_cloud_stem->points[index].normal_y,
+                                        clustered_cloud_stem->points[index].z;
+            }
+
+            Circle circle = CircleFitting_3D(points_to_fit);
+            if(circle.s <= Circle::MSE_MAX && circle.r < 0.4) {
+                stem_candidate.pushCircle(std::move(circle));
+            }
+        }
+    }
+
+    void multiThreadedStemClustering() {
+        // ... Code to cluster stems ...
+        // Clear the point cloud before clustering
+        clustered_cloud->clear();
+        single_scan.tree_infos_.clear();
+        single_scan.time_stamp_ = cloudHeader.stamp.toSec();
+        // cylinder_cloud->clear();
+        pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
+        // Now cluster pointcloud into seperate trunks first
+
+        ec.setClusterTolerance(0.1); // aug 4 = 0.3
+        ec.setMinClusterSize(10);    // aug4 = 20
+        ec.setMaxClusterSize(1000);  //   60 was good.
+
+        ec.setInputCloud(nonGroundCloud); //
+        cluster_indices_stem.clear();
+        ec.extract(cluster_indices_stem);
+
+        std::vector<std::thread> threads; // To keep track of threads
+        std::vector<Stem> stem_candidates(cluster_indices_stem.size()); // Pre-size the vector
+
+        for (size_t i = 0; i < cluster_indices_stem.size(); ++i) {
+            const pcl::PointIndices &cluster = cluster_indices_stem[i];
+            pcl::PointCloud<pcl::PointXYZLNormal>::Ptr single_cluster(new pcl::PointCloud<pcl::PointXYZLNormal>);
+
+            // Populate single_cluster with points from the current cluster
+            pcl::PointXYZLNormal point;
+            for (const int index : cluster.indices)
+            {
+                // Create a new point without color
+                point.normal_x = nonGroundCloud->points[index].x;
+                point.normal_y = nonGroundCloud->points[index].y;
+                // point.h = 0;
+                // point.s = 0;
+                point.x = 0;
+                point.y = 0;
+                point.z = nonGroundCloud->points[index].intensity;
+                single_cluster->points.push_back(point);
+            }
+            // Launch a new thread for circleClustering on this cluster
+            // Assume Stem is a suitable data structure to hold results from each thread
+            threads.emplace_back(&cloudSegmentation::multiThreadedcircleClustering, this, single_cluster, std::ref(stem_candidates[i]));
+        }
+
+        // Wait for all threads to finish their work
+        for (std::thread &thread : threads) {
+            thread.join();
+        }
+
+        // Process results after all threads have completed
+        for (Stem &stem_candidate : stem_candidates) {
+            if (stem_candidate.num_circle > 6) {
+                // Process each stem_candidate as per your logic
+                stem_candidate.get_averages();
+                stem_candidate.get_standard_deviation();
+                single_scan.tree_infos_.push_back(stem_candidate.Get_tree_info());
+                // Other processing...
+            }
+        }
+    }
+
+
+
+
+    void runOdometry(){
         if(single_scan.tree_infos_.size() > MIN_STEM_NUM ){
             //std::cout<< "\n single_scan.tree_infos\n"<<single_scan.tree_infos_.size();
             scans.push_back(single_scan);// optimizing with std::move is possible here
@@ -650,11 +773,10 @@ public:
             } else {
                 std::cout<<"*********************icp matching failed!**************** "<< failure_num++<<std::endl;
             }
-        }       
+        }
     }
 
-
-            /************************* End 20 Nov ************************/
+/************************* End 20 Nov ************************/
         
 
         // After a sincle_scan is generated: ( which has to have the infos like a single_scan.txt does):
@@ -664,11 +786,14 @@ public:
         // 3. maitain a global stem map, local stem map, odometry and pose2posetranslation data structures.
         // 4. if condition to run graph optimization is met, construct the pose graph and solve
 
-    /*************************  20 Nov ************************/
+/*************************  20 Nov ****************************/
+
+
+
     void runPoseGraphOptimization(){
         //std::cout << "runPoseGraphOptimization has been called"<<endl;
         // Run in every 3 scan
-        if(pose_i % 3==0 || pose_i==407){    //pose_i % 3==0
+        if(pose_i !=0 && pose_i % 2==0 || pose_i==407){    //pose_i % 3==0
         
             const char* homeDir = getenv("HOME");
             std::string fullPath = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/g2o_result/"
@@ -683,12 +808,12 @@ public:
             bool use_kernel = true;
             bool save_g2o = true;
             poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose,use_kernel,kernelwidth_SE2,kernelwidth_SE2XY);
-
+            std::cout << "Pose graph optimization done." << std::endl;
             // Save a .g2o file to local for inspection
             if( pose_i%3==0  &&  pose_i>230  &&  save_g2o==true){
             // Run in every 50 scan
                 poseGraphBuilder.saveGraph(fullPath);
-                std::cout << "Pose graph optimization completed." << std::endl;
+                std::cout << "Pose graph optimization result saved to local." << std::endl;
             }
             
         }
@@ -802,10 +927,11 @@ public:
         projectTo2D();
         removeNan();
         radiusOutlierRemoval();
-        //euclideanClustering(); // Do stems grouping
-        stemClustering();
+        multiThreadedStemClustering();
+        //stemClustering();
+        runOdometry();
         runPoseGraphOptimization();
-        //projectTo3D(); // For visualization
+        //projectTo3D(); // For point cloud visualization
     }
 
     void publishCloud()

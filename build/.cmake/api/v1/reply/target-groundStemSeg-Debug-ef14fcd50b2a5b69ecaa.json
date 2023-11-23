@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "devel/lib/libpatchworkpp.so"
+			"path" : "devel/lib/patchworkpp/groundStemSeg"
 		}
 	],
 	"backtrace" : 1,
@@ -10,7 +10,7 @@
 	{
 		"commands" : 
 		[
-			"add_library",
+			"add_executable",
 			"target_link_libraries",
 			"add_dependencies",
 			"add_definitions",
@@ -43,19 +43,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 94,
+				"line" : 112,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 95,
+				"line" : 113,
 				"parent" : 0
 			},
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 96,
+				"line" : 114,
 				"parent" : 0
 			},
 			{
@@ -195,25 +195,25 @@
 			{
 				"command" : 10,
 				"file" : 0,
-				"line" : 62,
+				"line" : 63,
 				"parent" : 0
 			},
 			{
 				"command" : 10,
 				"file" : 0,
-				"line" : 71,
+				"line" : 72,
 				"parent" : 0
 			},
 			{
 				"command" : 10,
 				"file" : 0,
-				"line" : 76,
+				"line" : 77,
 				"parent" : 0
 			},
 			{
 				"command" : 10,
 				"file" : 0,
-				"line" : 79,
+				"line" : 80,
 				"parent" : 0
 			},
 			{
@@ -230,7 +230,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "  -fopenmp -g -fPIC  "
+					"fragment" : "  -fopenmp -g  "
 				},
 				{
 					"fragment" : "-std=c++14"
@@ -261,9 +261,6 @@
 				{
 					"backtrace" : 17,
 					"define" : "ROS_PACKAGE_NAME=\"patchworkpp\""
-				},
-				{
-					"define" : "patchworkpp_EXPORTS"
 				},
 				{
 					"backtrace" : 24,
@@ -358,13 +355,17 @@
 			"id" : "patchworkpp_generate_messages_cpp::@6890427a1f51a3e7e1df"
 		}
 	],
-	"id" : "patchworkpp::@6890427a1f51a3e7e1df",
+	"id" : "groundStemSeg::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "",
+				"fragment" : "-fopenmp -g",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-rdynamic",
 				"role" : "flags"
 			},
 			{
@@ -2267,8 +2268,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "patchworkpp",
-	"nameOnDisk" : "libpatchworkpp.so",
+	"name" : "groundStemSeg",
+	"nameOnDisk" : "groundStemSeg",
 	"paths" : 
 	{
 		"build" : ".",
@@ -2289,9 +2290,9 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "src/patchworkpp.cpp",
+			"path" : "src/groundStemSeg.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],
-	"type" : "SHARED_LIBRARY"
+	"type" : "EXECUTABLE"
 }

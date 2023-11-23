@@ -75,7 +75,11 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "csignal": "cpp",
+        "core": "cpp",
+        "valarray": "cpp",
+        "codecvt": "cpp"
     },
     "ros.distro": "noetic"
 }
