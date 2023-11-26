@@ -38,10 +38,13 @@ bool Icp2d::pose_estimation_3d3d() {
     // bfnn_cloud_mt(source_, target_, matches);
     // for every point in target , find a corespond in source
     assert(matches.size() != 0);
-    int N = check_matches(matches);
 
-    
-    if(N < MIN_MATCHED_PAIR) {
+    double N_match = check_matches(matches);
+    double N_union = (target_.size() + source_.size()) ;
+    fitness_ = N_match /  ( N_union - N_match);
+
+    //std::cout<<"N_match: "<<N_match<<"\nN_union: "<<N_union<<"\nfitness_ "<<fitness_<<std::endl;
+    if( N_match < MIN_MATCHED_PAIR) {
        
         return  false;
         }
@@ -52,21 +55,21 @@ bool Icp2d::pose_estimation_3d3d() {
         // LOG(INFO) << "dis: " << (target_[pair.first] - source_[pair.second]).squaredNorm();
     }
 
-    std::vector<Vec3d> target_c(N), source_c(N); // holder for centralized points
+    std::vector<Vec3d> target_c(N_match), source_c(N_match); // holder for centralized points
     Vec3d p1, p2; // center of mass
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N_match; i++) {
         p1 += target_[matches[i].first].cast<double>();
         p2 += source_[matches[i].second].cast<double>();
     }
-    p1 /= N;
-    p2 /= N;
-    for (int i = 0; i < N; i++) {
+    p1 /= N_match;
+    p2 /= N_match;
+    for (int i = 0; i < N_match; i++) {
         target_c[i] = target_[matches[i].first].cast<double>() - p1;
         source_c[i] = source_[matches[i].second].cast<double>() - p2;
     }
 
     Eigen::Matrix3d W = Eigen::Matrix3d::Zero();
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < N_match; i++) {
         W += Eigen::Vector3d(target_c[i][0], target_c[i][1], target_c[i][2]) *
              Eigen::Vector3d(source_c[i][0], source_c[i][1], source_c[i][2]).transpose();
     }

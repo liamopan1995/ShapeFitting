@@ -79,7 +79,8 @@
         "csignal": "cpp",
         "core": "cpp",
         "valarray": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "numericaldiff": "cpp"
     },
     "ros.distro": "noetic"
 }

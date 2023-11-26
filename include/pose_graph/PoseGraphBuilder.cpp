@@ -61,7 +61,6 @@ void PoseGraphBuilder::build_optimize_Graph(const std::vector<Vec6d>& globalMap,
 
 void PoseGraphBuilder::clusterData(const std::vector<Vec6d>& globalMap) {
     clusteredData_.clear();
-
     arma::mat data;
     for (const auto& point : globalMap) {
         // Include only x, y, r
@@ -93,6 +92,7 @@ void PoseGraphBuilder::clusterData(const std::vector<Vec6d>& globalMap) {
 
         clusteredData_.push_back(objectWithCluster);
     }
+    clusteredLocalMap_ = clusteredData_;// save up for analysis use
 }
 
 void PoseGraphBuilder::addVerticesAndEdges(

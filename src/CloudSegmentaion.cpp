@@ -48,6 +48,14 @@ inline int32_t generateRandomRGB() {
     return (static_cast<int32_t>(r) << 16 | static_cast<int32_t>(g) << 8 | static_cast<int32_t>(b));
 }
 
+Eigen::Matrix2d createRotationMatrix(double radians) {
+    // Create the rotation matrix
+    Eigen::Matrix2d rotationMatrix;
+    rotationMatrix << cos(radians), -sin(radians),
+                      sin(radians), cos(radians);
+
+    return rotationMatrix;
+}
 
 typedef pcl::PointXYZI PointType;
 
@@ -71,7 +79,7 @@ private:
     std::vector<MovementData> odometry;
     std::vector<MovementData> translation_pose2pose;
     std::vector<Vec6d> global_map;
-    std::vector<Vec6d> local_map;
+    std::vector<std::pair<double,double>> fitness;  // matching fitness = points intersetion /  points union 
 
 
 /************************************** End 20 No v************************************************/
@@ -121,11 +129,20 @@ private:
 
 public:
     /************** 20 Nov ************/
+    std::vector<Vec6d> local_map;// changed to public for convinience 
     Vec3d path_accumulated =Vec3d::Zero();
     Mat3d Rotation_accumulated = Mat3d::Identity();
     /************** End 20 Nov************/
 
-    void saveToFiles() const {
+
+    // void saveOptimalPoseLandmarks() const {
+           // Leave it to python scripts,  having a final g2o file is engouh.
+    //     // Save optimal translations between poses and optimal position of landmarks by iterating over the pose graph
+
+    // }
+
+
+    void saveToFiles() {
         /// Saves tree infomations ( x, y ,r ) as one row to local
         /// In each txt file , it contains several rows ,each represent a single tree (stem)
         /// So later visulization tools can  be applied on these files to see 
@@ -138,18 +155,18 @@ public:
         int scanIdx = 0;
         for (const auto& scan : scans) {
             // Construct the desired path with unique filename
-            std::string fullPath = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/scans/"
+            std::string fullPath_0 = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/scans/"
                                 + "single_scan_" + std::to_string(scanIdx++) + ".txt";
 
-            std::ofstream fout(fullPath);
-            if (!fout) {
-                std::cerr << "Error: Unable to open file for writing: " << fullPath << std::endl;
+            std::ofstream fout_0(fullPath_0);
+            if (!fout_0) {
+                std::cerr << "Error: Unable to open file for writing: " << fullPath_0 << std::endl;
                 continue; // move to the next file
             }
             //  modified at oct.
             int stemIdx = 0;
             for (const auto& tree_info : scan.tree_infos_) {
-                fout<< std::setprecision(18)<< scan.time_stamp_ << " " 
+                fout_0<< std::setprecision(18)<< scan.time_stamp_ << " " 
                     << std::setprecision(9)
                     << tree_info.x_ << " " 
                     << tree_info.y_ << " " 
@@ -158,6 +175,157 @@ public:
             }
 
         }
+
+        // *******************26 Nov**************
+
+
+        // Lambdas
+        auto save_vec3 = [](std::ofstream& fout, const Eigen::Vector3d& v) {
+            fout << v[0] << " " << v[1] << " " << v[2] << " ";
+        };
+
+        auto save_vec6 = [](std::ofstream& fout, const Vec6d& v) {
+            fout << v(0,0) << " " << v(1,0) << " " << v(2,0) << " "<<std::setprecision(18) <<v(3,0) << " " <<std::setprecision(9)<< v(4,0) << " " << v(5,0)<< " ";
+        };
+
+        auto save_quat = [](std::ofstream& fout, const Mat3d& R) {
+            Eigen::Quaterniond q(R);
+            fout << q.w() << " " << q.x() << " " << q.y() << " " << q.z() << " ";
+        };
+
+        auto save_yaw_pitch_roll = [](std::ofstream& fout, const Eigen::Matrix3d& R) {
+            Eigen::Vector3d euler_angles = R.eulerAngles(2, 1, 0); // ZYX order
+            double yaw = euler_angles[0] ; 
+            double pitch = euler_angles[1] ; 
+            double roll = euler_angles[2] ; 
+            fout << yaw << " " << pitch << " " << roll;
+        };
+
+        // Save every single poses in the global map(frame)
+        std::string fullPath_1 = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/scans/analysis/state_cloud_2d.txt";
+        std::ofstream fout_1(fullPath_1);
+        if (!fout_1) {
+            std::cerr << "Error: directionary not found!" << std::endl;
+            return ;
+        }
+        for (const auto& reading : odometry) {
+            fout_1 << std::setprecision(18) << reading.timestamp_ << " " << std::setprecision(9);
+            save_vec3(fout_1, reading.p_);
+            //Replace the next line with save_row_pitch_yaw in order to save rotation in angleform
+            //Or append yaw pitch roll to the end of v_, we choose the second way
+            save_quat(fout_1, reading.R_); 
+            save_vec3(fout_1, reading.v_);
+            save_yaw_pitch_roll(fout_1, reading.R_);//Appeding
+            fout_1 << std::endl;
+        }
+
+        // Save landmarks in the global map 
+        std::string fullPath_2 = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/scans/analysis/global_map.txt";
+        std::ofstream fout_2(fullPath_2);
+        if (!fout_2) {
+            std::cerr << "Error: directionary not found!" << std::endl;
+            return ;
+        }
+        for (const auto& reading : poseGraphBuilder.clusteredData_) { // clusteredLocalMap_ is the centralized global_map with cluster indices
+            fout_2 << std::setprecision(9);
+            save_vec6(fout_2, reading);
+            fout_2 << std::endl;
+        }
+
+        // **********************************************************Start Modification 
+
+        // Save "the other global map, constructed by applying translations from the result of pose graph optimization" 
+        std::cout << "local map size :" << local_map.size() <<std::endl;
+        std::cout << "clusteredLocalMap_ size :" << poseGraphBuilder.clusteredLocalMap_.size() <<std::endl;
+
+        // Make local_map to have global index:
+        for(int i=0; i <local_map.size(); ++i){
+            local_map[i](5,0)= poseGraphBuilder.clusteredLocalMap_[i](5);
+        }
+
+
+        int iter_back = local_map.size() - 1;
+        std::vector<Vec6d> remapped_local_map;
+        std::string fullPath_3 = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/scans/analysis/reconstructed_global_map.txt";
+        std::ofstream fout_3(fullPath_3);
+        if (!fout_3) {
+            std::cerr << "Error: directionary not found!" << std::endl;
+            return ;
+        }
+        // Apply translations from pose graph on each local map in clusteredLocalMap_ to build another global map (duplicated)
+        // Eigen::Vector3d frame_in_global = Rotation_accumulated * point + path_accumulated;
+        // get related SE2 from pose graph *  Iterating over the pose graph:
+
+        for (auto it = poseGraphBuilder.optimizer_.vertices().begin(); it != poseGraphBuilder.optimizer_.vertices().end(); ++it) {
+            // It will iterate from the largest vertex ID to the smallest vertex ID:
+            g2o::OptimizableGraph::Vertex* v = static_cast<g2o::OptimizableGraph::Vertex*>(it->second);
+
+            if (auto pose_vertex = dynamic_cast<g2o::VertexSE2*>(v)) {
+
+                // Create the translation and rotation:
+                // Eigen::Vector3d euler_angles = pose.R_.eulerAngles(2, 1, 0);
+                double euler_angle = pose_vertex->estimate().rotation().angle();
+                Mat2d rotation = createRotationMatrix(euler_angle);
+                Vec2d translation;
+                translation(0) = pose_vertex->estimate().translation().x();
+                translation(1) = pose_vertex->estimate().translation().y();
+
+
+                // Apply the obtained SE2 to the points in corresponding single scan
+                while( iter_back >= 0 ) {
+                    Vec6d reading = local_map[iter_back];
+                    Vec2d point;
+                    point(0) =  reading(0);
+                    point(1) =  reading(1);
+                    point = rotation * point + translation;
+                    reading(0) = point(0);
+                    reading(1) = point(1);
+                    remapped_local_map.insert(remapped_local_map.begin(), reading);
+                    --iter_back;
+                    if(reading(4) == 0) {break;}
+                }
+
+            }
+        }
+        std::cout<<"final iter_back  "<<iter_back<<std::endl;
+
+        for (const auto& reading : remapped_local_map) {  // clusteredLocalMap_ is the local_map with cluster indices
+            fout_3 << std::setprecision(9);
+            save_vec6(fout_3, reading);
+            fout_3 << std::endl;
+        }
+
+        // ************************************************************End modification 
+        // Save translations of consective poses 
+        std::string fullPath_4 = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/scans/analysis/translation_consective_poses.txt";
+        std::ofstream fout_4(fullPath_4);
+        if (!fout_4) {
+            std::cerr << "Error: directionary not found!" << std::endl;
+            return ;
+        }
+        for (const auto& reading : translation_pose2pose) {
+            fout_4 << std::setprecision(18) << reading.timestamp_ << " " << std::setprecision(9);
+            save_vec3(fout_4, reading.p_);
+            save_quat(fout_4, reading.R_); 
+            save_vec3(fout_4, reading.v_);
+            save_yaw_pitch_roll(fout_4, reading.R_);//Appeding
+            fout_4 << std::endl;
+        }
+
+
+        // Save fitness
+        std::string fullPath_5 = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/scans/analysis/fitness.txt";
+        std::ofstream fout_5(fullPath_5);
+        if (!fout_5) {
+            std::cerr << "Error: directory not found!" << std::endl;
+            return;
+        }
+
+        // Save each pair in one row
+        for (const auto& pair : fitness) {
+            fout_5 << std::setprecision(18) << pair.first << " " << std::setprecision(9) << pair.second << std::endl;
+        }
+            // *******************End 26 Nov**************
     }
         
     cloudSegmentation() : nh(), pnh("~")
@@ -695,11 +863,16 @@ public:
             // if pose estimation failed:
             if (!icp_2d.pose_estimation_3d3d()) {
                 std::cout<<"*********************icp matching failed!**************** "<< failure_num++<<std::endl;
+                //std::cout<<"\nfitness_: "<<icp_2d.fitness_<<std::endl;
+                fitness.push_back(std::make_pair(timestamp, icp_2d.fitness_));
                 return;
             }
             Mat3d R = icp_2d.Get_Odometry().R_;
             Vec3d t = icp_2d.Get_Odometry().p_;
             if(!t.hasNaN()&& !R.hasNaN()) {
+
+                fitness.push_back(std::make_pair(timestamp,  icp_2d.fitness_));
+                //std::cout<<"\nfitness_: "<<icp_2d.fitness_<<std::endl;
                 // because the swaped use of target and source in the code : bfnn
                 // the t and R is the transformation for aligning the older scan to the newst scan.
                 path_accumulated -= t;
@@ -740,6 +913,8 @@ public:
                 icp_2d.SetSource(scan_data);//oct 18
             } else {
                 std::cout<<"*********************icp matching failed!**************** "<< failure_num++<<std::endl;
+                //std::cout<<"\nfitness_: "<<icp_2d.fitness_<<std::endl;
+                fitness.push_back(std::make_pair(timestamp,  icp_2d.fitness_));
             }
         }
     }
@@ -761,7 +936,7 @@ public:
     void runPoseGraphOptimization(){
         //std::cout << "runPoseGraphOptimization has been called"<<endl;
         // Run in every 3 scan
-        if(pose_i !=0 && pose_i % 2==0 || pose_i==407){    //pose_i % 3==0
+        if( (pose_i !=0 && pose_i % 2==0 ) || pose_i>250){    //pose_i % 3==0
         
             const char* homeDir = getenv("HOME");
             std::string fullPath = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/g2o_result/"
@@ -770,15 +945,15 @@ public:
             //Reusing it by  just reseting all vertices and edges at here 
             poseGraphBuilder.clear_edges_vertices();
 
-            //With/out robust kernel
+            //With/-out robust kernel
             double kernelwidth_SE2 = 5.0;   // ori. 1
             double kernelwidth_SE2XY = 5.0; // ori. 5
             bool use_kernel = true;
             bool save_g2o = true;
-            poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose,use_kernel,kernelwidth_SE2,kernelwidth_SE2XY);
+            poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose,use_kernel, kernelwidth_SE2, kernelwidth_SE2XY);
             std::cout << "Pose graph optimization done." << std::endl;
             // Save a .g2o file to local for inspection
-            if( pose_i%3==0  &&  pose_i>230  &&  save_g2o==true){
+            if(  pose_i>230  &&  save_g2o==true){
             // Run in every 50 scan
                 poseGraphBuilder.saveGraph(fullPath);
                 std::cout << "Pose graph optimization result saved to local." << std::endl;
@@ -952,7 +1127,7 @@ public:
         // Confirmed:[It is better not to has voxel filter here]
 
         removePointsInBox();
-        PatchworkppGroundSeg->estimate_ground(*laserCloudIn, *groundCloud, *nonGroundCloud, time_taken);
+        PatchworkppGroundSeg->estimate_ground(*laserCloudIn, *groundCloud, *nonGroundCloud, time_taken);// REMOVE GROUND
         //printLineToROSTerminal();
         stemSeg();
         publishCloud();
@@ -973,5 +1148,10 @@ int main(int argc, char **argv)
     ros::spin();
 
     IP.saveToFiles();
+    
+    // TODO : NOV 23.
+    //  ADD a NEW function that iterate the final pose graph and saves all landmarks as one file and all poses as one file
+    //  see if we can then remap each single_scan back to the global map and analyse the feature extraction quality by
+    //  comparing it to the other global map consisting of lanmarks from pose graph.
     return 0;
 }

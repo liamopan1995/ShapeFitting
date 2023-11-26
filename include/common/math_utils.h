@@ -721,6 +721,17 @@ bool PoseInterp(double query_time, const std::map<double, T>& data, const std::f
     return true;
 }
 
+// Eigen::Matrix2d createRotationMatrix(double angle) {
+//     // Convert angle from degrees to radians
+//     double radians = angle * M_PI / 180.0;
+
+//     // Create the rotation matrix
+//     Eigen::Matrix2d rotationMatrix;
+//     rotationMatrix << cos(radians), -sin(radians),
+//                       sin(radians), cos(radians);
+
+//     return rotationMatrix;
+// }
 }  // namespace sad::math
 
 #endif  // MAPPING_MATH_UTILS_H

@@ -16,6 +16,7 @@ class PoseGraphBuilder {
 public:
     g2o::SparseOptimizer optimizer_;
     std::vector<Vec6d> clusteredData_;
+    std::vector<Vec6d> clusteredLocalMap_;
     //int last_pose_id_;
     //g2o::VertexSE2* last_se2_;
     PoseGraphBuilder();
