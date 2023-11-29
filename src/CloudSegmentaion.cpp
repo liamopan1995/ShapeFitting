@@ -936,21 +936,23 @@ public:
     void runPoseGraphOptimization(){
         //std::cout << "runPoseGraphOptimization has been called"<<endl;
         // Run in every 3 scan
-        if( (pose_i !=0 && pose_i % 2==0 ) || pose_i>250){    //pose_i % 3==0
+        if( (pose_i !=0 && pose_i % 1==0 ) || pose_i>225){    //Set update frequency
         
             const char* homeDir = getenv("HOME");
             std::string fullPath = std::string(homeDir) + "/catkin_ws_aug/src/shapefitting/g2o_result/"
                                 + "single_scan_" + std::to_string(pose_i) + ".g2o";
-            std::cout<< "In iter: "<<pose_i<<endl;
+            std::cout<< "In iter(pose_i): "<<pose_i<<endl;
             //Reusing it by  just reseting all vertices and edges at here 
-            poseGraphBuilder.clear_edges_vertices();
+
 
             //With/-out robust kernel
             double kernelwidth_SE2 = 5.0;   // ori. 1
             double kernelwidth_SE2XY = 5.0; // ori. 5
             bool use_kernel = true;
             bool save_g2o = true;
-            poseGraphBuilder.build_optimize_Graph(global_map, local_map, odometry, translation_pose2pose,use_kernel, kernelwidth_SE2, kernelwidth_SE2XY);
+            poseGraphBuilder.clear_edges_vertices();
+            poseGraphBuilder.build_optimize_Graph(
+                                global_map, local_map, odometry, translation_pose2pose,use_kernel, kernelwidth_SE2, kernelwidth_SE2XY);
             std::cout << "Pose graph optimization done." << std::endl;
             // Save a .g2o file to local for inspection
             if(  pose_i>230  &&  save_g2o==true){
@@ -959,98 +961,193 @@ public:
                 std::cout << "Pose graph optimization result saved to local." << std::endl;
             }
             
+
+
+        
+            // Visualization of the trajectory and landmarks
+            nav_msgs::Path path;
+            // path can be replaced by the odometry type , 
+            // timestamp can be stored and later retrieved from a map
+            // velocities can be derived from consective vertices.
+            visualization_msgs::MarkerArray marker_array;
+            geometry_msgs::PoseWithCovarianceStamped poseMsg;
+            path.header.stamp = ros::Time::now();
+            path.header.frame_id = "world";  // Adjust the frame_id as per your setup
+
+            g2o::VertexSE2* lastSE2Vertex = nullptr;
+            for (auto it = poseGraphBuilder.optimizer_.vertices().begin(); it != poseGraphBuilder.optimizer_.vertices().end(); ++it) {
+                g2o::OptimizableGraph::Vertex* v = static_cast<g2o::OptimizableGraph::Vertex*>(it->second);
+
+                if (auto pose_vertex = dynamic_cast<g2o::VertexSE2*>(v)) {
+                    geometry_msgs::PoseStamped pose_stamped;
+                    pose_stamped.header = path.header;
+
+                    // Extracting the pose from the vertex
+                    pose_stamped.pose.position.x = pose_vertex->estimate().translation().x();
+                    pose_stamped.pose.position.y = pose_vertex->estimate().translation().y();
+                    //pose_stamped.pose.position.z = 0; // For 2D, z is typically 0
+
+                    tf::Quaternion q;
+                    q.setRPY(0, 0, pose_vertex->estimate().rotation().angle());
+                    tf::quaternionTFToMsg(q, pose_stamped.pose.orientation);
+
+                    path.poses.push_back(pose_stamped);
+                    // Set lastSE2Vertex to point to the last SE2 vertex
+                    if(lastSE2Vertex==nullptr){
+                        lastSE2Vertex = pose_vertex; 
+                    }
+                    
+                }
+
+                if (auto landmark_vertex = dynamic_cast<g2o::VertexPointXY*>(v)) {
+                    visualization_msgs::Marker marker;
+                    marker.header.frame_id = "world";  // or your relevant frame
+                    marker.header.stamp = ros::Time::now();
+                    marker.ns = "landmarks";
+                    marker.id = landmark_vertex->id(); // Unique ID for the landmark
+                    marker.type = visualization_msgs::Marker::CYLINDER; // Marker's shape
+                    marker.action = visualization_msgs::Marker::ADD;
+                    
+                    marker.pose.position.x = landmark_vertex->estimate()[0];
+                    marker.pose.position.y = landmark_vertex->estimate()[1];
+                    //marker.pose.orientation.x = 0.0;
+                    //marker.pose.orientation.y = 0.0;
+                    //marker.pose.orientation.z = 0.0;
+                    //marker.pose.orientation.w = 1.0; // Identity quaternion
+
+                    marker.scale.x = 0.5; // Size of the marker
+                    marker.scale.y = 0.5;
+                    marker.scale.z = 2;
+
+                    marker.color.a = 1.0; // alpha
+                    marker.color.r = 1.0; // Red color
+                    //marker.color.g = 0.0;
+                    //marker.color.b = 0.0;
+
+                    marker_array.markers.push_back(marker);
+                }
+                
+            }
+            pubPath.publish(path);
+            pubLandmarks.publish(marker_array);
+            // **************************  Modification 22 Nov **************************************************//
+
+            if (lastSE2Vertex) {
+                geometry_msgs::PoseWithCovarianceStamped poseMsg;
+                // Set the header
+                // Todo:    Make a hash map,  retrieve the exact timestamp and put it into poseMeg
+                // 
+                poseMsg.header = path.header;
+                // Nov 29
+                poseMsg.header.stamp =  ros::Time(poseGraphBuilder.timestamp_map[lastSE2Vertex]);
+                // END Nov 29 
+                // Set the pose data
+                poseMsg.pose.pose.position.x = lastSE2Vertex->estimate().translation().x();
+                poseMsg.pose.pose.position.y = lastSE2Vertex->estimate().translation().y();
+                //poseMsg.pose.pose.position.z = 0; // For 2D, z is typically 0
+
+                tf::Quaternion q;
+                q.setRPY(0, 0, lastSE2Vertex->estimate().rotation().angle());
+                tf::quaternionTFToMsg(q, poseMsg.pose.pose.orientation);
+
+                // Publish the pose message
+                pubPose.publish(poseMsg);
+            }
+            // **************************  End Modification 22 Nov **************************************************//
         }
         ++pose_i;
 
         
-        // Visualization of the trajectory and landmarks
-        nav_msgs::Path path;
-        // path can be replaced by the odometry type , 
-        // timestamp can be stored and later retrieved from a map
-        // velocities can be derived from consective vertices.
-        visualization_msgs::MarkerArray marker_array;
-        geometry_msgs::PoseWithCovarianceStamped poseMsg;
-        path.header.stamp = ros::Time::now();
-        path.header.frame_id = "world";  // Adjust the frame_id as per your setup
+        // // Visualization of the trajectory and landmarks
+        // nav_msgs::Path path;
+        // // path can be replaced by the odometry type , 
+        // // timestamp can be stored and later retrieved from a map
+        // // velocities can be derived from consective vertices.
+        // visualization_msgs::MarkerArray marker_array;
+        // geometry_msgs::PoseWithCovarianceStamped poseMsg;
+        // path.header.stamp = ros::Time::now();
+        // path.header.frame_id = "world";  // Adjust the frame_id as per your setup
 
-        g2o::VertexSE2* lastSE2Vertex = nullptr;
-        for (auto it = poseGraphBuilder.optimizer_.vertices().begin(); it != poseGraphBuilder.optimizer_.vertices().end(); ++it) {
-            g2o::OptimizableGraph::Vertex* v = static_cast<g2o::OptimizableGraph::Vertex*>(it->second);
+        // g2o::VertexSE2* lastSE2Vertex = nullptr;
+        // for (auto it = poseGraphBuilder.optimizer_.vertices().begin(); it != poseGraphBuilder.optimizer_.vertices().end(); ++it) {
+        //     g2o::OptimizableGraph::Vertex* v = static_cast<g2o::OptimizableGraph::Vertex*>(it->second);
 
-            if (auto pose_vertex = dynamic_cast<g2o::VertexSE2*>(v)) {
-                geometry_msgs::PoseStamped pose_stamped;
-                pose_stamped.header = path.header;
+        //     if (auto pose_vertex = dynamic_cast<g2o::VertexSE2*>(v)) {
+        //         geometry_msgs::PoseStamped pose_stamped;
+        //         pose_stamped.header = path.header;
 
-                // Extracting the pose from the vertex
-                pose_stamped.pose.position.x = pose_vertex->estimate().translation().x();
-                pose_stamped.pose.position.y = pose_vertex->estimate().translation().y();
-                //pose_stamped.pose.position.z = 0; // For 2D, z is typically 0
+        //         // Extracting the pose from the vertex
+        //         pose_stamped.pose.position.x = pose_vertex->estimate().translation().x();
+        //         pose_stamped.pose.position.y = pose_vertex->estimate().translation().y();
+        //         //pose_stamped.pose.position.z = 0; // For 2D, z is typically 0
 
-                tf::Quaternion q;
-                q.setRPY(0, 0, pose_vertex->estimate().rotation().angle());
-                tf::quaternionTFToMsg(q, pose_stamped.pose.orientation);
+        //         tf::Quaternion q;
+        //         q.setRPY(0, 0, pose_vertex->estimate().rotation().angle());
+        //         tf::quaternionTFToMsg(q, pose_stamped.pose.orientation);
 
-                path.poses.push_back(pose_stamped);
-                // Set lastSE2Vertex to point to the last SE2 vertex
-                if(lastSE2Vertex==nullptr){
-                    lastSE2Vertex = pose_vertex; 
-                }
+        //         path.poses.push_back(pose_stamped);
+        //         // Set lastSE2Vertex to point to the last SE2 vertex
+        //         if(lastSE2Vertex==nullptr){
+        //             lastSE2Vertex = pose_vertex; 
+        //         }
                 
-            }
+        //     }
 
-            if (auto landmark_vertex = dynamic_cast<g2o::VertexPointXY*>(v)) {
-                visualization_msgs::Marker marker;
-                marker.header.frame_id = "world";  // or your relevant frame
-                marker.header.stamp = ros::Time::now();
-                marker.ns = "landmarks";
-                marker.id = landmark_vertex->id(); // Unique ID for the landmark
-                marker.type = visualization_msgs::Marker::CYLINDER; // Marker's shape
-                marker.action = visualization_msgs::Marker::ADD;
+        //     if (auto landmark_vertex = dynamic_cast<g2o::VertexPointXY*>(v)) {
+        //         visualization_msgs::Marker marker;
+        //         marker.header.frame_id = "world";  // or your relevant frame
+        //         marker.header.stamp = ros::Time::now();
+        //         marker.ns = "landmarks";
+        //         marker.id = landmark_vertex->id(); // Unique ID for the landmark
+        //         marker.type = visualization_msgs::Marker::CYLINDER; // Marker's shape
+        //         marker.action = visualization_msgs::Marker::ADD;
                 
-                marker.pose.position.x = landmark_vertex->estimate()[0];
-                marker.pose.position.y = landmark_vertex->estimate()[1];
-                //marker.pose.orientation.x = 0.0;
-                //marker.pose.orientation.y = 0.0;
-                //marker.pose.orientation.z = 0.0;
-                //marker.pose.orientation.w = 1.0; // Identity quaternion
+        //         marker.pose.position.x = landmark_vertex->estimate()[0];
+        //         marker.pose.position.y = landmark_vertex->estimate()[1];
+        //         //marker.pose.orientation.x = 0.0;
+        //         //marker.pose.orientation.y = 0.0;
+        //         //marker.pose.orientation.z = 0.0;
+        //         //marker.pose.orientation.w = 1.0; // Identity quaternion
 
-                marker.scale.x = 0.5; // Size of the marker
-                marker.scale.y = 0.5;
-                marker.scale.z = 2;
+        //         marker.scale.x = 0.5; // Size of the marker
+        //         marker.scale.y = 0.5;
+        //         marker.scale.z = 2;
 
-                marker.color.a = 1.0; // alpha
-                marker.color.r = 1.0; // Red color
-                //marker.color.g = 0.0;
-                //marker.color.b = 0.0;
+        //         marker.color.a = 1.0; // alpha
+        //         marker.color.r = 1.0; // Red color
+        //         //marker.color.g = 0.0;
+        //         //marker.color.b = 0.0;
 
-                marker_array.markers.push_back(marker);
-            }
+        //         marker_array.markers.push_back(marker);
+        //     }
             
-        }
-        pubPath.publish(path);
-        pubLandmarks.publish(marker_array);
-        // **************************  Modification 22 Nov **************************************************//
+        // }
+        // pubPath.publish(path);
+        // pubLandmarks.publish(marker_array);
+        // // **************************  Modification 22 Nov **************************************************//
 
-        if (lastSE2Vertex) {
-            geometry_msgs::PoseWithCovarianceStamped poseMsg;
-            // Set the header
-            // Todo:    Make a hash map,  retrieve the exact timestamp and put it into poseMeg
-            // 
-            poseMsg.header = path.header;
+        // if (lastSE2Vertex) {
+        //     geometry_msgs::PoseWithCovarianceStamped poseMsg;
+        //     // Set the header
+        //     // Todo:    Make a hash map,  retrieve the exact timestamp and put it into poseMeg
+        //     // 
+        //     poseMsg.header = path.header;
+        //     // Nov 29
+        //     poseMsg.header.stamp =  ros::Time(poseGraphBuilder.timestamp_map[lastSE2Vertex]);
+        //     // END Nov 29 
+        //     // Set the pose data
+        //     poseMsg.pose.pose.position.x = lastSE2Vertex->estimate().translation().x();
+        //     poseMsg.pose.pose.position.y = lastSE2Vertex->estimate().translation().y();
+        //     //poseMsg.pose.pose.position.z = 0; // For 2D, z is typically 0
 
-            // Set the pose data
-            poseMsg.pose.pose.position.x = lastSE2Vertex->estimate().translation().x();
-            poseMsg.pose.pose.position.y = lastSE2Vertex->estimate().translation().y();
-            //poseMsg.pose.pose.position.z = 0; // For 2D, z is typically 0
+        //     tf::Quaternion q;
+        //     q.setRPY(0, 0, lastSE2Vertex->estimate().rotation().angle());
+        //     tf::quaternionTFToMsg(q, poseMsg.pose.pose.orientation);
 
-            tf::Quaternion q;
-            q.setRPY(0, 0, lastSE2Vertex->estimate().rotation().angle());
-            tf::quaternionTFToMsg(q, poseMsg.pose.pose.orientation);
-
-            // Publish the pose message
-            pubPose.publish(poseMsg);
-        }
-        // **************************  End Modification 22 Nov **************************************************//
+        //     // Publish the pose message
+        //     pubPose.publish(poseMsg);
+        // }
+        // // **************************  End Modification 22 Nov **************************************************//
     }   
     /*************************  End 20 Nov **************************************************************************/
 
@@ -1149,9 +1246,5 @@ int main(int argc, char **argv)
 
     IP.saveToFiles();
     
-    // TODO : NOV 23.
-    //  ADD a NEW function that iterate the final pose graph and saves all landmarks as one file and all poses as one file
-    //  see if we can then remap each single_scan back to the global map and analyse the feature extraction quality by
-    //  comparing it to the other global map consisting of lanmarks from pose graph.
     return 0;
 }

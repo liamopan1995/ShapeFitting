@@ -22,6 +22,7 @@ PoseGraphBuilder::PoseGraphBuilder() {
 }
 void PoseGraphBuilder::clear_edges_vertices(){
     optimizer_.clear();
+    timestamp_map.clear();
     //std::cout<<"all vertices and edges are deleted, ready for new problem"<<std::endl;
 }
 void PoseGraphBuilder::initializeOptimizer() {
@@ -190,6 +191,11 @@ void PoseGraphBuilder::addVerticesAndEdges(
         g2o::VertexSE2* v = new g2o::VertexSE2();
         v->setId(vertex_se2_id);
         v->setEstimate(g2o::SE2(x, y, yaw));
+
+        // Nov 29
+        timestamp_map[v] = timestamp;
+        // END Nov 29
+
         //cout<< "new vertex ,  id: "<< vertex_se2_id <<"added\n";
         // Fix the first vertex
         if(vertex_se2_id == vertex_cnt + 1    ) { //+49
@@ -348,6 +354,10 @@ void PoseGraphBuilder::addVerticesAndEdges_kernelized(
         double yaw = euler_angles[0] ;
 
         g2o::VertexSE2* v = new g2o::VertexSE2();
+        // Nov 29
+        timestamp_map[v] = timestamp;
+        // END Nov 29
+
         v->setId(vertex_se2_id);
         v->setEstimate(g2o::SE2(x, y, yaw));
         //cout<< "new vertex ,  id: "<< vertex_se2_id <<"added\n";

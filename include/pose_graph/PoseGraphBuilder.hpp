@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map> // save timestamp
 #include <Eigen/Dense>
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/types/slam2d/types_slam2d.h>
@@ -17,8 +18,10 @@ public:
     g2o::SparseOptimizer optimizer_;
     std::vector<Vec6d> clusteredData_;
     std::vector<Vec6d> clusteredLocalMap_;
-    //int last_pose_id_;
-    //g2o::VertexSE2* last_se2_;
+    // Nov 29
+    std::unordered_map<g2o::VertexSE2*, double> timestamp_map;
+    // Nov 29
+
     PoseGraphBuilder();
 
     void build_optimize_Graph(const std::vector<Vec6d>& globalMap, 
