@@ -38,9 +38,11 @@ bool Icp2d::pose_estimation_3d3d() {
     // bfnn_cloud_mt(source_, target_, matches);
     // for every point in target , find a corespond in source
     assert(matches.size() != 0);
-
     double N_match = check_matches(matches);
-    double N_union = (target_.size() + source_.size()) ;
+    n_matches_ = N_match;
+    n_source_ = target_.size();  //  Because at the beignning the definitions(use) of target and source were mixed up
+    n_target_ = source_.size();  //  .. 
+    double N_union = (n_source_ + n_target_) ;
     fitness_ = N_match /  ( N_union - N_match);
 
     //std::cout<<"N_match: "<<N_match<<"\nN_union: "<<N_union<<"\nfitness_ "<<fitness_<<std::endl;

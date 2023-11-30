@@ -14,7 +14,10 @@ Class: ICP 2d  Implementation
 class Icp2d {
    public:
     double fitness_;  // fitness= intersection/union
-
+    double n_matches_; 
+    double n_target_;
+    double n_source_;
+    
     struct Options {
         ///int max_iteration_ = 20;                // 最大迭代次数
         double max_nn_distance_ = 1.0;          // 点到点最近邻查找时阈值

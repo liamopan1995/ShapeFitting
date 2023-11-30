@@ -79,7 +79,7 @@ private:
     std::vector<MovementData> odometry;
     std::vector<MovementData> translation_pose2pose;
     std::vector<Vec6d> global_map;
-    std::vector<std::pair<double,double>> fitness;  // matching fitness = points intersetion /  points union 
+    std::vector<Vec6d> fitness;  // matching fitness = points intersetion /  points union 
 
 
 /************************************** End 20 No v************************************************/
@@ -322,8 +322,10 @@ public:
         }
 
         // Save each pair in one row
-        for (const auto& pair : fitness) {
-            fout_5 << std::setprecision(18) << pair.first << " " << std::setprecision(9) << pair.second << std::endl;
+        for (const auto& reading : fitness) {
+            fout_5 << std::setprecision(18); 
+            save_vec6(fout_5, reading);
+            fout_5 << std::endl;
         }
             // *******************End 26 Nov**************
     }
@@ -864,14 +866,21 @@ public:
             if (!icp_2d.pose_estimation_3d3d()) {
                 std::cout<<"*********************icp matching failed!**************** "<< failure_num++<<std::endl;
                 //std::cout<<"\nfitness_: "<<icp_2d.fitness_<<std::endl;
-                fitness.push_back(std::make_pair(timestamp, icp_2d.fitness_));
+
+                Vec6d vec;
+                vec << timestamp, icp_2d.fitness_, icp_2d.n_matches_, icp_2d.n_target_, icp_2d.n_source_, 0.0;
+                fitness.push_back(vec);
+
                 return;
             }
             Mat3d R = icp_2d.Get_Odometry().R_;
             Vec3d t = icp_2d.Get_Odometry().p_;
             if(!t.hasNaN()&& !R.hasNaN()) {
 
-                fitness.push_back(std::make_pair(timestamp,  icp_2d.fitness_));
+                // fitness.push_back(std::make_pair(timestamp,  icp_2d.fitness_));
+                Vec6d vec;
+                vec << timestamp, icp_2d.fitness_, icp_2d.n_matches_, icp_2d.n_target_, icp_2d.n_source_, 0.0;
+                fitness.push_back(vec);
                 //std::cout<<"\nfitness_: "<<icp_2d.fitness_<<std::endl;
                 // because the swaped use of target and source in the code : bfnn
                 // the t and R is the transformation for aligning the older scan to the newst scan.
@@ -914,7 +923,9 @@ public:
             } else {
                 std::cout<<"*********************icp matching failed!**************** "<< failure_num++<<std::endl;
                 //std::cout<<"\nfitness_: "<<icp_2d.fitness_<<std::endl;
-                fitness.push_back(std::make_pair(timestamp,  icp_2d.fitness_));
+                Vec6d vec;
+                vec << timestamp, icp_2d.fitness_, icp_2d.n_matches_, icp_2d.n_target_, icp_2d.n_source_, 0.0;
+                fitness.push_back(vec);
             }
         }
     }
