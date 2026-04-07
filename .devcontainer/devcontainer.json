@@ -1,0 +1,9 @@
+{
+  "name": "ShapeFitting Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-20.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/python:1": {}
+  },
+  "postCreateCommand": "sudo apt update && sudo apt install -y libgtest-dev build-essential cmake"
+}
