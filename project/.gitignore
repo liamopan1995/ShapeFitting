@@ -1,0 +1,25 @@
+# Build artifacts
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/Makefile
+/*.cmake
+
+# Generated project files
+/*.dir
+/*.vcxproj*
+/*.sln
+
+# Editor temporary files
+*~
+*.swp
+*.swo
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
